@@ -28,16 +28,12 @@ function copyOutput() {
 }
 
 /* ===========================
-   API HELPERS
+   API HELPER (DIRECT NETLIFY FUNCTION)
 =========================== */
 
-/**
- * Base GET call via Netlify backend
- * Example: apiGet("projects")
- *          apiGet("projects/123/todolists")
- */
 async function apiGet(path) {
-  const res = await fetch(`/api/${path}`);
+  const url = `/.netlify/functions/proofhub/${path}`;
+  const res = await fetch(url);
 
   if (!res.ok) {
     const text = await res.text();
@@ -47,9 +43,10 @@ async function apiGet(path) {
   return res.json();
 }
 
-/**
- * Normalize ProofHub list responses
- */
+/* ===========================
+   DATA NORMALIZER
+=========================== */
+
 function extractArray(json, keys = []) {
   if (Array.isArray(json)) return json;
   if (Array.isArray(json.data)) return json.data;
@@ -59,7 +56,6 @@ function extractArray(json, keys = []) {
       return json.data[key];
     }
   }
-
   return [];
 }
 
