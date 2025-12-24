@@ -11,47 +11,35 @@
   <style>
     body {
       background: linear-gradient(180deg, #eef2ff, #f8fafc);
-      font-size: 12px; /* slightly smaller overall */
+      font-size: 12px;
       color: #0f172a;
       margin: 0;
     }
 
     /* ===== HEADER ===== */
     .app-header {
-      height: 60px;
+      height: 56px;
       background: linear-gradient(90deg, #4f46e5, #6366f1);
       color: #fff;
       display: flex;
       align-items: center;
-      padding: 0 24px;
+      padding: 0 20px;
+      font-weight: 600;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .logo {
-      font-weight: 700;
-      font-size: 15px;
-      letter-spacing: 0.4px;
     }
 
     /* ===== LAYOUT ===== */
     .layout {
       display: grid;
-      grid-template-columns: 220px 1fr; /* sidebar reduced */
-      min-height: calc(100vh - 60px);
+      grid-template-columns: 210px 1fr;
+      min-height: calc(100vh - 56px);
     }
 
     /* ===== SIDEBAR ===== */
     .sidebar {
-      background: linear-gradient(180deg, #020617, #020617);
+      background: #020617;
       color: #cbd5e1;
-      padding: 16px;
-    }
-
-    .sidebar h6 {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: #64748b;
-      margin-bottom: 12px;
+      padding: 14px;
     }
 
     .nav-item {
@@ -73,51 +61,35 @@
 
     /* ===== CONTENT ===== */
     .content {
-      padding: 20px;
+      padding: 18px;
       overflow-y: auto;
     }
 
-    /* ===== INFO CARDS ===== */
+    /* ===== INFO CARD ===== */
     .stat-card {
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
+      background: #fff;
       border-radius: 14px;
       padding: 14px;
       box-shadow: 0 10px 20px rgba(15,23,42,0.08);
-    }
-
-    .stat-title {
-      font-size: 11px;
-      color: #64748b;
-      text-transform: uppercase;
-    }
-
-    .stat-value {
-      font-size: 18px;
-      font-weight: 700;
-      margin-top: 4px;
+      margin-bottom: 16px;
     }
 
     /* ===== TABLE ===== */
     .card {
-      border-radius: 16px;
+      border-radius: 14px;
       box-shadow: 0 10px 24px rgba(15,23,42,0.1);
     }
 
     table {
       width: 100%;
-      font-size: 12px; /* compact table font */
+      font-size: 11.5px;
     }
 
     thead th {
-      background: linear-gradient(180deg, #eef2ff, #e0e7ff);
+      background: #eef2ff;
       font-size: 11px;
       text-transform: uppercase;
       padding: 6px;
-    }
-
-    tbody tr:hover {
-      background: #eef2ff;
-      cursor: pointer;
     }
 
     td {
@@ -125,6 +97,11 @@
       vertical-align: top;
       white-space: normal;
       word-break: break-word;
+    }
+
+    tbody tr:hover {
+      background: #eef2ff;
+      cursor: pointer;
     }
 
     /* Assigned IDs */
@@ -144,14 +121,21 @@
 
     /* ===== RAW JSON ===== */
     .json-panel {
-      background: linear-gradient(180deg, #020617, #020617);
+      background: #020617;
       color: #e5e7eb;
       border-radius: 14px;
-      padding: 16px;
+      padding: 14px;
       font-size: 12px;
       max-height: 320px;
       overflow: auto;
+      margin-top: 12px;
     }
+
+    .json-key { color: #38bdf8; }
+    .json-string { color: #4ade80; }
+    .json-number { color: #facc15; }
+    .json-boolean { color: #fb7185; }
+    .json-null { color: #94a3b8; }
 
     /* ===== FOOTER ===== */
     .app-footer {
@@ -168,9 +152,7 @@
 
 <!-- HEADER -->
 <div class="app-header">
-  <div class="logo">
-    <i class="bi bi-diagram-3-fill"></i> ProofHub Admin
-  </div>
+  <i class="bi bi-diagram-3-fill me-2"></i> ProofHub Admin
 </div>
 
 <!-- LAYOUT -->
@@ -178,7 +160,6 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <h6>Navigation</h6>
     <div class="nav-item active"><i class="bi bi-kanban"></i> Projects</div>
     <div class="nav-item"><i class="bi bi-list-task"></i> Task Lists</div>
     <div class="nav-item"><i class="bi bi-check2-square"></i> Tasks</div>
@@ -188,19 +169,13 @@
   <!-- CONTENT -->
   <main class="content">
 
-    <!-- STATS -->
-    <div class="row mb-4">
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="stat-title">Total Projects</div>
-          <div class="stat-value" id="totalProjects">—</div>
-        </div>
-      </div>
+    <div class="stat-card">
+      <strong>Total Projects:</strong>
+      <span id="totalProjects">—</span>
     </div>
 
-    <!-- ACTION BAR -->
-    <div class="d-flex justify-content-between mb-3">
-      <h4>Projects</h4>
+    <div class="d-flex justify-content-between mb-2">
+      <h5>Projects</h5>
       <div class="d-flex gap-2">
         <input id="projectIdInput" class="form-control form-control-sm" placeholder="Project ID">
         <button class="btn btn-outline-primary btn-sm" onclick="fetchProjectById()">Fetch Project</button>
@@ -208,8 +183,7 @@
       </div>
     </div>
 
-    <!-- TABLE -->
-    <div class="card mb-4">
+    <div class="card mb-3">
       <div class="card-body table-responsive">
         <table class="table table-sm table-hover align-middle">
           <thead>
@@ -233,8 +207,7 @@
       </div>
     </div>
 
-    <!-- RAW JSON -->
-    <h5>Raw JSON Inspector</h5>
+    <h6>Raw JSON</h6>
     <div id="output" class="json-panel"></div>
 
   </main>
@@ -242,7 +215,7 @@
 
 <!-- FOOTER -->
 <div class="app-footer">
-  © 2025 ProofHub API Dashboard • Internal Tool
+  © 2025 ProofHub API Dashboard
 </div>
 
 <script src="app.js"></script>
