@@ -1,15 +1,31 @@
 export async function handler(event) {
   try {
-    const path = event.queryStringParameters?.path;
+    /*
+      event.path examples:
+      /.netlify/functions/proofhub
+      /.netlify/functions/proofhub/projects
+      /.netlify/functions/proofhub/projects/6607/todolists
+    */
+
+    let path = event.path
+      .replace("/.netlify/functions/proofhub", "")
+      .replace(/^\/+/, ""); // remove leading slash
+
+    // If using redirect /api/*
+    if (path.startsWith("api/")) {
+      path = path.replace("api/", "");
+    }
 
     if (!path) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: "Missing path parameter" })
+        body: JSON.stringify({
+          error: "Missing API path",
+          hint: "Expected /api/projects or similar"
+        })
       };
     }
 
-    // FINAL ProofHub URL
     const url = `https://projects.proofhub.com/api/v3/${path}`;
 
     const response = await fetch(url, {
