@@ -16,7 +16,7 @@
       margin: 0;
     }
 
-    /* ===== HEADER ===== */
+    /* HEADER */
     .app-header {
       height: 56px;
       background: linear-gradient(90deg, #4f46e5, #6366f1);
@@ -28,14 +28,14 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    /* ===== LAYOUT ===== */
+    /* LAYOUT */
     .layout {
       display: grid;
       grid-template-columns: 210px 1fr;
       min-height: calc(100vh - 56px);
     }
 
-    /* ===== SIDEBAR ===== */
+    /* SIDEBAR */
     .sidebar {
       background: #020617;
       color: #cbd5e1;
@@ -59,13 +59,13 @@
       color: #fff;
     }
 
-    /* ===== CONTENT ===== */
+    /* CONTENT */
     .content {
       padding: 18px;
       overflow-y: auto;
     }
 
-    /* ===== INFO CARD ===== */
+    /* INFO CARD */
     .stat-card {
       background: #fff;
       border-radius: 14px;
@@ -74,7 +74,7 @@
       margin-bottom: 16px;
     }
 
-    /* ===== TABLE ===== */
+    /* TABLE */
     .card {
       border-radius: 14px;
       box-shadow: 0 10px 24px rgba(15,23,42,0.1);
@@ -104,31 +104,24 @@
       cursor: pointer;
     }
 
-    /* Assigned IDs */
-    .assigned-grid {
-      display: grid;
-      grid-template-columns: repeat(2, auto);
-      gap: 4px 6px;
+    /* Assigned IDs – simple text */
+    .assigned-text {
+      line-height: 1.4;
+      font-size: 11.5px;
+      color: #1e293b;
     }
 
-    .assigned-id {
-      background: #e0e7ff;
-      color: #3730a3;
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 11px;
-    }
-
-    /* ===== RAW JSON ===== */
+    /* RAW JSON */
     .json-panel {
       background: #020617;
       color: #e5e7eb;
       border-radius: 14px;
       padding: 14px;
       font-size: 12px;
-      max-height: 320px;
+      max-height: 360px;
       overflow: auto;
       margin-top: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
 
     .json-key { color: #38bdf8; }
@@ -137,7 +130,7 @@
     .json-boolean { color: #fb7185; }
     .json-null { color: #94a3b8; }
 
-    /* ===== FOOTER ===== */
+    /* FOOTER */
     .app-footer {
       background: linear-gradient(90deg, #4f46e5, #6366f1);
       color: #e0e7ff;
@@ -176,11 +169,7 @@
 
     <div class="d-flex justify-content-between mb-2">
       <h5>Projects</h5>
-      <div class="d-flex gap-2">
-        <input id="projectIdInput" class="form-control form-control-sm" placeholder="Project ID">
-        <button class="btn btn-outline-primary btn-sm" onclick="fetchProjectById()">Fetch Project</button>
-        <button class="btn btn-primary btn-sm" onclick="fetchProjects()">Fetch All</button>
-      </div>
+      <button class="btn btn-primary btn-sm" onclick="fetchProjects()">Fetch All</button>
     </div>
 
     <div class="card mb-3">
