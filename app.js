@@ -18,31 +18,32 @@ function findProjectsDeep(data) {
   function walk(node) {
     if (!node || typeof node !== "object") return;
 
-    if (
-      typeof node.id === "number" &&
-      typeof node.title === "string" &&
-      !seen.has(node.id)
-    ) {
+    if (node.id && node.title && !seen.has(node.id)) {
       seen.add(node.id);
       results.push(node);
     }
 
-    if (Array.isArray(node)) {
-      node.forEach(walk);
-    } else {
-      Object.values(node).forEach(walk);
-    }
+    Object.values(node).forEach(walk);
   }
 
   walk(data);
   return results;
 }
 
-/* ================= FORMATTERS ================= */
+/* ================= HELPERS ================= */
 
 const formatDate = d => (d ? new Date(d).toLocaleDateString() : "-");
 
-function formatCategoryName(p) {
+function formatAssigned(a) {
+  if (!Array.isArray(a) || !a.length) return "-";
+  return `
+    <div class="assigned-grid">
+      ${a.map(id => `<div class="assigned-id">${id}</div>`).join("")}
+    </div>
+  `;
+}
+
+function formatCategory(p) {
   if (p.category_name && p.category_name.trim()) return p.category_name;
   if (p.category?.id) return `Category ID: ${p.category.id}`;
   return "-";
@@ -50,70 +51,45 @@ function formatCategoryName(p) {
 
 /* ================= RENDER ================= */
 
-function renderProjects(projects) {
-  const container = document.getElementById("projectsContainer");
-  container.innerHTML = "";
+function renderTable(projects) {
+  const table = document.getElementById("projectsTable");
+  table.innerHTML = "";
 
   projects.forEach(p => {
-    const card = document.createElement("div");
-    card.className = "project-card";
-
-    card.innerHTML = `
-      <div class="project-title">${p.title}</div>
-      <div class="project-id">ID: ${p.id}</div>
-
-      <div class="section">
-        <div class="label">Description</div>
-        <div class="value">${p.description || "-"}</div>
-      </div>
-
-      <div class="section grid-2">
-        <div>
-          <div class="label">Start Date</div>
-          <div class="value">${formatDate(p.start_date)}</div>
-        </div>
-        <div>
-          <div class="label">End Date</div>
-          <div class="value">${formatDate(p.end_date)}</div>
-        </div>
-        <div>
-          <div class="label">Status</div>
-          <div class="value">${p.status?.id ?? "-"}</div>
-        </div>
-        <div>
-          <div class="label">Category</div>
-          <div class="value">${formatCategoryName(p)}</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="label">Assigned</div>
-        <div class="assigned-grid">
-          ${(p.assigned || []).length
-            ? p.assigned.map(id => `<div class="assigned-id">${id}</div>`).join("")
-            : "-"}
-        </div>
-      </div>
-
-      <div class="section grid-2">
-        <div>
-          <div class="label">Creator</div>
-          <div class="value">${p.creator?.id ?? "-"}</div>
-        </div>
-        <div>
-          <div class="label">Manager</div>
-          <div class="value">${p.manager?.id ?? "-"}</div>
-        </div>
-      </div>
-
-      <button class="btn btn-link mt-2" onclick='toggleJson(this)'>
-        View Raw JSON
-      </button>
-      <pre style="display:none">${JSON.stringify(p, null, 2)}</pre>
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${p.id}</td>
+      <td>${p.title}</td>
+      <td class="col-desc">${p.description || "-"}</td>
+      <td class="col-dates">${formatDate(p.start_date)}</td>
+      <td class="col-dates">${formatDate(p.end_date)}</td>
+      <td class="col-status">${p.status?.id ?? "-"}</td>
+      <td class="col-assigned">${formatAssigned(p.assigned)}</td>
+      <td class="col-category">${formatCategory(p)}</td>
     `;
-
-    container.appendChild(card);
+    table.appendChild(row);
   });
+}
+
+/* ================= COLUMN TOGGLE ================= */
+
+function toggleCol(name) {
+  document.querySelectorAll(`.col-${name}`).forEach(el =>
+    el.classList.toggle("col-hidden")
+  );
+}
+
+/* ================= JSON ================= */
+
+function setOutput(data) {
+  const json = JSON.stringify(data, null, 2)
+    .replace(/"(.*?)":/g, '<span class="json-key">"$1"</span>:')
+    .replace(/: "(.*?)"/g, ': <span class="json-string">"$1"</span>')
+    .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>')
+    .replace(/: null/g, ': <span class="json-null">null</span>');
+
+  document.getElementById("output").innerHTML = json;
 }
 
 /* ================= ACTIONS ================= */
@@ -121,7 +97,8 @@ function renderProjects(projects) {
 async function fetchProjects() {
   const json = await apiGet("projects");
   const projects = findProjectsDeep(json);
-  renderProjects(projects);
+  renderTable(projects);
+  setOutput(json);
 }
 
 async function fetchProjectById() {
@@ -130,12 +107,6 @@ async function fetchProjectById() {
 
   const json = await apiGet(`projects/${id}`);
   const projects = findProjectsDeep(json);
-  renderProjects(projects);
-}
-
-/* ================= UI HELPERS ================= */
-
-function toggleJson(btn) {
-  const pre = btn.nextElementSibling;
-  pre.style.display = pre.style.display === "none" ? "block" : "none";
+  renderTable(projects);
+  setOutput(json);
 }
