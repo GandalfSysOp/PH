@@ -12,71 +12,104 @@
 
   <style>
     body {
-      background: #f4f6f8;
-      font-size: 14px;
+      background-color: #f5f7fb;
+      font-size: 13px;
     }
 
     /* Sidebar */
     .sidebar {
-      width: 240px;
+      width: 260px;
       min-height: 100vh;
-      background: #1f2937;
-      color: #fff;
-      padding: 16px;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 20px;
     }
 
-    .sidebar h5 {
-      margin-bottom: 24px;
+    .sidebar h4 {
       font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .sidebar label {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .sidebar input {
+      background: #020617;
+      border: 1px solid #1e293b;
+      color: #e5e7eb;
+    }
+
+    .sidebar input::placeholder {
+      color: #6b7280;
     }
 
     .sidebar button {
       width: 100%;
+      margin-top: 8px;
+    }
+
+    .nav-btn {
       background: none;
       border: none;
-      color: #cbd5e1;
+      color: #cbd5f5;
       padding: 10px 12px;
       text-align: left;
       border-radius: 6px;
-      margin-bottom: 4px;
+      margin-top: 6px;
+      font-weight: 500;
     }
 
-    .sidebar button:hover,
-    .sidebar button.active {
-      background: #374151;
+    .nav-btn:hover,
+    .nav-btn.active {
+      background: #1e293b;
       color: #fff;
     }
 
-    /* Content */
+    /* Main content */
     .content {
       padding: 24px;
     }
 
-    .section {
-      display: none;
+    h3 {
+      font-weight: 600;
     }
 
-    .section.active {
-      display: block;
+    .card {
+      border: none;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
     }
 
-    pre {
-      background: #0f172a;
-      color: #e5e7eb;
-      padding: 12px;
-      border-radius: 6px;
-      max-height: 400px;
-      overflow: auto;
-      font-size: 12px;
+    /* Table */
+    .table-wrapper {
+      overflow-x: auto;
     }
 
-    table tbody tr {
+    table {
+      white-space: nowrap;
+    }
+
+    thead th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: #f8fafc;
+    }
+
+    tbody tr:hover {
+      background: #f1f5f9;
       cursor: pointer;
     }
 
-    .hint {
+    pre {
+      background: #020617;
+      color: #e5e7eb;
+      padding: 12px;
+      border-radius: 6px;
+      max-height: 350px;
+      overflow: auto;
       font-size: 12px;
-      color: #6b7280;
     }
   </style>
 </head>
@@ -85,146 +118,108 @@
 
 <div class="d-flex">
 
-  <!-- Sidebar -->
+  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <h5>ProofHub</h5>
+    <h4>ProofHub</h4>
 
-    <button class="active" onclick="showSection('projects')">Projects</button>
-    <button onclick="showSection('tasks')">Tasks</button>
-    <button onclick="showSection('people')">People</button>
-    <button onclick="showSection('manage')">Manage</button>
-    <button onclick="showSection('explorer')">Explorer</button>
+    <!-- Fetch Single Project -->
+    <div class="mb-4">
+      <label>Project ID</label>
+      <input
+        id="projectIdInput"
+        class="form-control form-control-sm"
+        placeholder="e.g. 9278482504"
+      />
+      <button
+        class="btn btn-primary btn-sm"
+        onclick="fetchProjectById()">
+        Load Project
+      </button>
+    </div>
+
+    <hr class="border-secondary opacity-25">
+
+    <!-- Navigation -->
+    <button class="nav-btn active" onclick="showSection('projects')">
+      Projects
+    </button>
+    <button class="nav-btn" onclick="showSection('tasks')">
+      Tasks
+    </button>
+    <button class="nav-btn" onclick="showSection('people')">
+      People
+    </button>
+    <button class="nav-btn" onclick="showSection('manage')">
+      Manage
+    </button>
+    <button class="nav-btn" onclick="showSection('explorer')">
+      Explorer
+    </button>
   </aside>
 
-  <!-- Main Content -->
+  <!-- MAIN CONTENT -->
   <main class="flex-grow-1 content">
 
-    <!-- ================= PROJECTS ================= -->
+    <!-- PROJECTS -->
     <section id="projects" class="section active">
-      <h4 class="mb-3">Projects</h4>
+      <h3 class="mb-3">Projects</h3>
 
-      <div class="card mb-3">
-        <div class="card-body d-flex gap-2 align-items-end">
-          <button class="btn btn-primary" onclick="fetchProjects()">
-            Fetch All Projects
-          </button>
-
-          <div>
-            <label class="form-label mb-1">Project ID</label>
-            <input id="projectIdInput" class="form-control" placeholder="e.g. 6607725333">
-          </div>
-
-          <button class="btn btn-secondary mb-1" onclick="fetchProjectById()">
-            Fetch Project
-          </button>
+      <div class="card mb-4">
+        <div class="card-body table-wrapper">
+          <table class="table table-sm table-hover align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status ID</th>
+                <th>Assigned IDs</th>
+                <th>Category ID</th>
+                <th>Creator ID</th>
+                <th>Manager ID</th>
+                <th>Category Name</th>
+                <th>Created</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody id="projectsTable"></tbody>
+          </table>
         </div>
       </div>
+    </section>
 
-      <div class="card mb-3">
+    <!-- TASKS -->
+    <section id="tasks" class="section" style="display:none;">
+      <h3>Tasks</h3>
+      <p class="text-muted">Coming next</p>
+    </section>
+
+    <!-- PEOPLE -->
+    <section id="people" class="section" style="display:none;">
+      <h3>People</h3>
+      <p class="text-muted">Coming next</p>
+    </section>
+
+    <!-- MANAGE -->
+    <section id="manage" class="section" style="display:none;">
+      <h3>Manage</h3>
+      <p class="text-muted">Coming next</p>
+    </section>
+
+    <!-- EXPLORER -->
+    <section id="explorer" class="section" style="display:none;">
+      <h3>API Explorer</h3>
+      <div class="card">
         <div class="card-body">
-          <h6>Projects List</h6>
-          <div class="table-responsive">
-            <table class="table table-sm table-hover">
-              <thead>
-                <tr>
-                  <th>ID</th>
-    <th>Title</th>
-    <th>Description</th>
-    <th>Start Date</th>
-    <th>End Date</th>
-    <th>Status</th>
-    <th>Assigned</th>
-    <th>Category</th>
-    <th>Creator</th>
-    <th>Manager</th>
-    <th>Category Name</th>
-    <th>Created At</th>
-    <th>Updated At</th>
-                </tr>
-              </thead>
-              <tbody id="projectsTable"></tbody>
-            </table>
-          </div>
-          <div class="hint">Click a row to copy Project ID & view raw data</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= TASKS ================= -->
-    <section id="tasks" class="section">
-      <h4 class="mb-3">Tasks</h4>
-
-      <div class="card mb-3">
-        <div class="card-body">
-          <div class="row g-2">
-            <div class="col">
-              <label class="form-label">Project ID</label>
-              <input id="taskProjectId" class="form-control">
-            </div>
-            <div class="col">
-              <label class="form-label">Tasklist ID</label>
-              <input id="tasklistId" class="form-control">
-            </div>
-          </div>
-
-          <div class="mt-3 d-flex gap-2">
-            <button class="btn btn-primary" onclick="fetchTasklists()">
-              Get Tasklists
-            </button>
-            <button class="btn btn-secondary" onclick="fetchTasks()">
-              Get Tasks
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= PEOPLE ================= -->
-    <section id="people" class="section">
-      <h4 class="mb-3">People</h4>
-
-      <div class="card mb-3">
-        <div class="card-body d-flex gap-2">
-          <button class="btn btn-primary" onclick="fetchPeople()">
-            Fetch All People
-          </button>
-
-          <input id="peopleId" class="form-control w-25" placeholder="Person ID">
-
-          <button class="btn btn-secondary" onclick="fetchPersonById()">
-            Fetch Person
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= MANAGE ================= -->
-    <section id="manage" class="section">
-      <h4 class="mb-3">Manage</h4>
-
-      <div class="card mb-3">
-        <div class="card-body d-flex gap-2 flex-wrap">
-          <button class="btn btn-outline-primary" onclick="callApi('labels')">Labels</button>
-          <button class="btn btn-outline-primary" onclick="callApi('categories')">Categories</button>
-          <button class="btn btn-outline-primary" onclick="callApi('projectstatus')">Project Status</button>
-          <button class="btn btn-outline-primary" onclick="callApi('workflows')">Workflows</button>
-          <button class="btn btn-outline-primary" onclick="callApi('roles')">Roles</button>
-          <button class="btn btn-outline-danger" onclick="callApi('trash')">Trash</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= EXPLORER ================= -->
-    <section id="explorer" class="section">
-      <h4 class="mb-3">API Explorer</h4>
-
-      <div class="card mb-3">
-        <div class="card-body">
-          <label class="form-label">API Path (after /api/v3/)</label>
           <div class="input-group">
-            <span class="input-group-text">/api/</span>
-            <input id="customPath" class="form-control"
-              placeholder="projects/6607/todolists/2469/tasks">
+            <span class="input-group-text">/</span>
+            <input
+              id="customPath"
+              class="form-control"
+              placeholder="projects/9278482504"
+            />
             <button class="btn btn-primary" onclick="callCustomPath()">
               GET
             </button>
@@ -233,13 +228,15 @@
       </div>
     </section>
 
-    <!-- ================= RAW OUTPUT ================= -->
-    <div class="card">
+    <!-- RAW OUTPUT -->
+    <div class="card mt-4">
       <div class="card-body">
         <div class="d-flex justify-content-between mb-2">
-          <h6 class="mb-0">Raw Response</h6>
-          <button class="btn btn-sm btn-outline-secondary" onclick="copyOutput()">
-            Copy JSON
+          <strong>Raw JSON</strong>
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            onclick="copyOutput()">
+            Copy
           </button>
         </div>
         <pre id="output"></pre>
