@@ -1,5 +1,7 @@
+console.log("app.js loaded");
+
 /* ===========================
-   GLOBAL HELPERS
+   UI HELPERS
 =========================== */
 
 function showSection(id) {
@@ -25,30 +27,40 @@ function copyOutput() {
   );
 }
 
+/* ===========================
+   API HELPERS
+=========================== */
+
 /**
- * Normalize ProofHub responses into array
+ * Base GET call via Netlify backend
+ * Example: apiGet("projects")
+ *          apiGet("projects/123/todolists")
+ */
+async function apiGet(path) {
+  const res = await fetch(`/api/${path}`);
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Normalize ProofHub list responses
  */
 function extractArray(json, keys = []) {
   if (Array.isArray(json)) return json;
   if (Array.isArray(json.data)) return json.data;
 
-  for (const k of keys) {
-    if (Array.isArray(json.data?.[k])) {
-      return json.data[k];
+  for (const key of keys) {
+    if (Array.isArray(json.data?.[key])) {
+      return json.data[key];
     }
   }
-  return [];
-}
 
-/**
- * Base GET call via Netlify backend
- */
-async function apiGet(path) {
-  const res = await fetch(`/api/${path}`);
-  if (!res.ok) {
-    throw new Error(`API error ${res.status}`);
-  }
-  return res.json();
+  return [];
 }
 
 /* ===========================
@@ -62,6 +74,11 @@ async function fetchProjects() {
 
     const table = document.getElementById("projectsTable");
     table.innerHTML = "";
+
+    if (!projects.length) {
+      table.innerHTML =
+        `<tr><td colspan="4">No projects found</td></tr>`;
+    }
 
     projects.forEach(p => {
       const row = document.createElement("tr");
@@ -84,19 +101,21 @@ async function fetchProjects() {
     setOutput(json);
 
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
 
 async function fetchProjectById() {
   try {
-    const id = document.getElementById("projectIdInput").value;
+    const id = document.getElementById("projectIdInput").value.trim();
     if (!id) return alert("Enter Project ID");
 
     const json = await apiGet(`projects/${id}`);
     setOutput(json.data || json);
 
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
@@ -108,7 +127,7 @@ async function fetchProjectById() {
 async function fetchTasklists() {
   try {
     const projectId =
-      document.getElementById("taskProjectId").value;
+      document.getElementById("taskProjectId").value.trim();
 
     if (!projectId) return alert("Enter Project ID");
 
@@ -119,6 +138,7 @@ async function fetchTasklists() {
     setOutput(json);
 
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
@@ -126,12 +146,12 @@ async function fetchTasklists() {
 async function fetchTasks() {
   try {
     const projectId =
-      document.getElementById("taskProjectId").value;
+      document.getElementById("taskProjectId").value.trim();
     const tasklistId =
-      document.getElementById("tasklistId").value;
+      document.getElementById("tasklistId").value.trim();
 
     if (!projectId || !tasklistId) {
-      return alert("Enter Project ID & Tasklist ID");
+      return alert("Enter Project ID and Tasklist ID");
     }
 
     const json = await apiGet(
@@ -141,6 +161,7 @@ async function fetchTasks() {
     setOutput(json);
 
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
@@ -154,19 +175,21 @@ async function fetchPeople() {
     const json = await apiGet("people");
     setOutput(json);
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
 
 async function fetchPersonById() {
   try {
-    const id = document.getElementById("peopleId").value;
+    const id = document.getElementById("peopleId").value.trim();
     if (!id) return alert("Enter Person ID");
 
     const json = await apiGet(`people/${id}`);
     setOutput(json);
 
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
@@ -180,6 +203,7 @@ async function callApi(path) {
     const json = await apiGet(path);
     setOutput(json);
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
@@ -199,6 +223,7 @@ async function callCustomPath() {
     setOutput(json);
 
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
