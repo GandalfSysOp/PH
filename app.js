@@ -1,7 +1,6 @@
 console.log("app.js loaded");
 
 /* ========= UI ========= */
-
 function showSection(id) {
   document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -11,27 +10,28 @@ function showSection(id) {
 }
 
 function copyOutput() {
-  navigator.clipboard.writeText(
-    document.getElementById("output").innerText
-  );
+  navigator.clipboard.writeText(document.getElementById("output").innerText);
 }
 
 /* ========= API ========= */
-
 async function apiGet(path) {
   const res = await fetch(`/.netlify/functions/proofhub/${path}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
-/* ========= FORMATTERS ========= */
-
-function formatDate(date) {
-  return date ? new Date(date).toLocaleDateString() : "-";
+/* ========= SAFE EXTRACTOR ========= */
+function extractProjects(json) {
+  if (Array.isArray(json)) return json;
+  if (Array.isArray(json.data?.projects)) return json.data.projects;
+  if (Array.isArray(json.projects)) return json.projects;
+  if (Array.isArray(json.data)) return json.data;
+  return [];
 }
 
-function formatStatus(status) {
-  return status?.id ?? "-";
+/* ========= FORMATTERS ========= */
+function formatDate(date) {
+  return date ? new Date(date).toLocaleDateString() : "-";
 }
 
 function formatAssigned(assigned) {
@@ -39,16 +39,11 @@ function formatAssigned(assigned) {
   return assigned.map(id => `<div class="assigned-id">${id}</div>`).join("");
 }
 
-function formatCategory(category) {
-  return category?.id ?? "-";
-}
-
-function formatUser(user) {
-  return user?.id ?? "-";
-}
+const formatStatus = s => s?.id ?? "-";
+const formatCategory = c => c?.id ?? "-";
+const formatUser = u => u?.id ?? "-";
 
 /* ========= JSON HIGHLIGHT ========= */
-
 function setOutput(data) {
   const json = JSON.stringify(data, null, 2)
     .replace(/"(.*?)":/g, '<span class="json-key">"$1"</span>:')
@@ -61,10 +56,9 @@ function setOutput(data) {
 }
 
 /* ========= PROJECTS ========= */
-
 async function fetchProjects() {
   const json = await apiGet("projects");
-  const projects = json.data?.projects || json.projects || [];
+  const projects = extractProjects(json);
 
   const table = document.getElementById("projectsTable");
   table.innerHTML = "";
