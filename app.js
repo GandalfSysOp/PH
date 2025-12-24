@@ -1,88 +1,94 @@
-const BASE_URL =
-  "https://script.google.com/macros/s/AKfycbz0hhGxhstl2xdyUBM5qtfN2VXP2oVKoSwZ8elcP6dkETdz-_yECOsNIOPNmwjur4A0/exec";
+const BASE_URL = "https://script.google.com/macros/s/AKfycbz0hhGxhstl2xdyUBM5qtfN2VXP2oVKoSwZ8elcP6dkETdz-_yECOsNIOPNmwjur4A0/exec";
 
-/* API */
 async function apiGet(path) {
-  const res = await fetch(`${BASE_URL}?path=${encodeURIComponent(path)}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
+    const url = `${BASE_URL}?path=${encodeURIComponent(path)}`;
 
-/* Project finder */
-function findProjectsDeep(data) {
-  const results = [];
-  const seen = new Set();
-
-  function walk(node) {
-    if (!node || typeof node !== "object") return;
-    if (node.id && node.title && !seen.has(node.id)) {
-      seen.add(node.id);
-      results.push(node);
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error(`API ${res.status}: ${await res.text()}`);
     }
-    Object.values(node).forEach(walk);
-  }
-
-  walk(data);
-  return results;
+    return res.json();
 }
 
-/* Helpers */
-const formatDate = d => d ? new Date(d).toLocaleDateString() : "-";
-
-function formatAssigned(a) {
-  if (!Array.isArray(a) || !a.length) return "-";
-  return `<div class="assigned-grid">${a.map(id => `<div class="assigned-id">${id}</div>`).join("")}</div>`;
-}
-
-function formatCategory(p) {
-  if (p.category_name && p.category_name.trim()) return p.category_name;
-  if (p.category?.id) return `ID: ${p.category.id}`;
-  return "-";
-}
-
-/* Render */
-function renderTable(projects) {
-  document.getElementById("totalProjects").textContent = projects.length;
-
-  const table = document.getElementById("projectsTable");
-  table.innerHTML = "";
-
-  projects.forEach(p => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${p.id}</td>
-      <td>${p.title}</td>
-      <td>${p.description || "-"}</td>
-      <td>${formatDate(p.start_date)}</td>
-      <td>${formatDate(p.end_date)}</td>
-      <td>${p.status?.id ?? "-"}</td>
-      <td>${formatAssigned(p.assigned)}</td>
-      <td>${formatCategory(p)}</td>
-    `;
-    row.onclick = () => {
-      document.getElementById("output").textContent =
-        JSON.stringify(p, null, 2);
-    };
-    table.appendChild(row);
-  });
-}
-
-/* Actions */
 async function fetchProjects() {
-  const json = await apiGet("projects");
-  const projects = findProjectsDeep(json);
-  renderTable(projects);
-  document.getElementById("output").textContent =
-    JSON.stringify(json, null, 2);
+    try {
+        const data = await apiGet("projects");
+
+        // Show raw JSON
+        document.getElementById("rawJson").innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+
+        // Build table
+        const table = document.getElementById("projectsTable");
+        table.innerHTML = "";
+
+        if (!Array.isArray(data) || data.length == 0) {
+            table.innerHTML = `<tr><td colspan="13">No projects found.</td></tr>`;
+            return;
+        }
+
+        data.forEach(project => {
+            const assignedDisplay = (project.assigned || []).map(id => `<div>${id}</div>`).join("");
+            const status = project.status?.id || "";
+            const categoryId = project.category?.id || "";
+
+            table.innerHTML += `
+            <tr>
+                <td>${project.id}</td>
+                <td>${project.title || ""}</td>
+                <td>${project.description || ""}</td>
+                <td>${project.start_date || ""}</td>
+                <td>${project.end_date || ""}</td>
+                <td>${status}</td>
+                <td>${assignedDisplay}</td>
+                <td>${categoryId}</td>
+                <td>${project.category_name || ""}</td>
+                <td>${project.creator?.id || ""}</td>
+                <td>${project.manager?.id || ""}</td>
+                <td>${project.created_at || ""}</td>
+                <td>${project.updated_at || ""}</td>
+            </tr>
+            `;
+        });
+
+    } catch (err) {
+        alert("Error: " + err.message);
+        console.error(err);
+    }
 }
 
-async function fetchProjectById() {
-  const id = document.getElementById("projectIdInput").value.trim();
-  if (!id) return alert("Enter Project ID");
-
-  const json = await apiGet(`projects/${id}`);
-  const projects = findProjectsDeep(json);
-  renderTable(projects);
-  document.getElementById("output").textContent =
-    JSON.stringify(json, null, 2);
+// Pretty color-coded JSON
+function syntaxHighlight(json) {
+    return json
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(
+            /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+            match => {
+                let cls = "number";
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = "key";
+                    } else {
+                        cls = "string";
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = "boolean";
+                } else if (/null/.test(match)) {
+                    cls = "null";
+                }
+                return `<span class="${cls}">${match}</span>`;
+            }
+        );
 }
+
+// JSON Color Classes
+const style = document.createElement("style");
+style.innerHTML = `
+    .string { color: #ce8453; }
+    .number { color: #44aaff; }
+    .boolean { color: #ff5c33; }
+    .null { color: #999; }
+    .key { color: #7ec699; }
+`;
+document.head.appendChild(style);
