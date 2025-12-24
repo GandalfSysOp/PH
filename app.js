@@ -1,28 +1,24 @@
 const BASE_URL =
   "https://script.google.com/macros/s/AKfycbz0hhGxhstl2xdyUBM5qtfN2VXP2oVKoSwZ8elcP6dkETdz-_yECOsNIOPNmwjur4A0/exec";
 
-/* ================= API ================= */
-
+/* API */
 async function apiGet(path) {
   const res = await fetch(`${BASE_URL}?path=${encodeURIComponent(path)}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
-/* ================= PROJECT FINDER ================= */
-
+/* Project finder */
 function findProjectsDeep(data) {
   const results = [];
   const seen = new Set();
 
   function walk(node) {
     if (!node || typeof node !== "object") return;
-
     if (node.id && node.title && !seen.has(node.id)) {
       seen.add(node.id);
       results.push(node);
     }
-
     Object.values(node).forEach(walk);
   }
 
@@ -30,28 +26,24 @@ function findProjectsDeep(data) {
   return results;
 }
 
-/* ================= HELPERS ================= */
-
-const formatDate = d => (d ? new Date(d).toLocaleDateString() : "-");
+/* Helpers */
+const formatDate = d => d ? new Date(d).toLocaleDateString() : "-";
 
 function formatAssigned(a) {
   if (!Array.isArray(a) || !a.length) return "-";
-  return `
-    <div class="assigned-grid">
-      ${a.map(id => `<div class="assigned-id">${id}</div>`).join("")}
-    </div>
-  `;
+  return `<div class="assigned-grid">${a.map(id => `<div class="assigned-id">${id}</div>`).join("")}</div>`;
 }
 
 function formatCategory(p) {
   if (p.category_name && p.category_name.trim()) return p.category_name;
-  if (p.category?.id) return `Category ID: ${p.category.id}`;
+  if (p.category?.id) return `ID: ${p.category.id}`;
   return "-";
 }
 
-/* ================= RENDER ================= */
-
+/* Render */
 function renderTable(projects) {
+  document.getElementById("totalProjects").textContent = projects.length;
+
   const table = document.getElementById("projectsTable");
   table.innerHTML = "";
 
@@ -60,45 +52,28 @@ function renderTable(projects) {
     row.innerHTML = `
       <td>${p.id}</td>
       <td>${p.title}</td>
-      <td class="col-desc">${p.description || "-"}</td>
-      <td class="col-dates">${formatDate(p.start_date)}</td>
-      <td class="col-dates">${formatDate(p.end_date)}</td>
-      <td class="col-status">${p.status?.id ?? "-"}</td>
-      <td class="col-assigned">${formatAssigned(p.assigned)}</td>
-      <td class="col-category">${formatCategory(p)}</td>
+      <td>${p.description || "-"}</td>
+      <td>${formatDate(p.start_date)}</td>
+      <td>${formatDate(p.end_date)}</td>
+      <td>${p.status?.id ?? "-"}</td>
+      <td>${formatAssigned(p.assigned)}</td>
+      <td>${formatCategory(p)}</td>
     `;
+    row.onclick = () => {
+      document.getElementById("output").textContent =
+        JSON.stringify(p, null, 2);
+    };
     table.appendChild(row);
   });
 }
 
-/* ================= COLUMN TOGGLE ================= */
-
-function toggleCol(name) {
-  document.querySelectorAll(`.col-${name}`).forEach(el =>
-    el.classList.toggle("col-hidden")
-  );
-}
-
-/* ================= JSON ================= */
-
-function setOutput(data) {
-  const json = JSON.stringify(data, null, 2)
-    .replace(/"(.*?)":/g, '<span class="json-key">"$1"</span>:')
-    .replace(/: "(.*?)"/g, ': <span class="json-string">"$1"</span>')
-    .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
-    .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>')
-    .replace(/: null/g, ': <span class="json-null">null</span>');
-
-  document.getElementById("output").innerHTML = json;
-}
-
-/* ================= ACTIONS ================= */
-
+/* Actions */
 async function fetchProjects() {
   const json = await apiGet("projects");
   const projects = findProjectsDeep(json);
   renderTable(projects);
-  setOutput(json);
+  document.getElementById("output").textContent =
+    JSON.stringify(json, null, 2);
 }
 
 async function fetchProjectById() {
@@ -108,5 +83,6 @@ async function fetchProjectById() {
   const json = await apiGet(`projects/${id}`);
   const projects = findProjectsDeep(json);
   renderTable(projects);
-  setOutput(json);
+  document.getElementById("output").textContent =
+    JSON.stringify(json, null, 2);
 }
