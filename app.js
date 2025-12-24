@@ -9,7 +9,7 @@ async function apiGet(path) {
   return res.json();
 }
 
-/* ================= PROJECT DETECTOR ================= */
+/* ================= PROJECT FINDER (STABLE) ================= */
 
 function findProjectsDeep(data) {
   const results = [];
@@ -18,7 +18,11 @@ function findProjectsDeep(data) {
   function walk(node) {
     if (!node || typeof node !== "object") return;
 
-    if (node.id && node.title && !seen.has(node.id)) {
+    if (
+      typeof node.id === "number" &&
+      typeof node.title === "string" &&
+      !seen.has(node.id)
+    ) {
       seen.add(node.id);
       results.push(node);
     }
@@ -37,23 +41,22 @@ function findProjectsDeep(data) {
 /* ================= FORMATTERS ================= */
 
 const formatDate = d => (d ? new Date(d).toLocaleDateString() : "-");
-const formatStatus = s => s?.id ?? "-";
-const formatCategory = c => c?.id ?? "-";
-const formatUser = u => u?.id ?? "-";
-
-function formatCategoryName(p) {
-  return p.category_name && p.category_name.trim()
-    ? p.category_name
-    : "—";
-}
 
 function formatAssigned(a) {
   if (!Array.isArray(a) || !a.length) return "-";
   return `
-    <div class="assigned-container">
+    <div class="assigned-grid">
       ${a.map(id => `<div class="assigned-id">${id}</div>`).join("")}
     </div>
   `;
+}
+
+/* 🔑 FIXED CATEGORY NAME (robust fallback) */
+function formatCategoryName(p) {
+  if (p.category_name && p.category_name.trim()) return p.category_name;
+  if (p.category?.name) return p.category.name;
+  if (p.category?.id) return `Category ID: ${p.category.id}`;
+  return "-";
 }
 
 /* ================= JSON OUTPUT ================= */
@@ -69,12 +72,9 @@ function setOutput(data) {
   document.getElementById("output").innerHTML = json;
 }
 
-/* ================= PROJECTS ================= */
+/* ================= RENDER TABLE ================= */
 
-async function fetchProjects() {
-  const json = await apiGet("projects");
-  const projects = findProjectsDeep(json);
-
+function renderTable(projects) {
   const table = document.getElementById("projectsTable");
   table.innerHTML = "";
 
@@ -86,11 +86,11 @@ async function fetchProjects() {
       <td>${p.description || "-"}</td>
       <td>${formatDate(p.start_date)}</td>
       <td>${formatDate(p.end_date)}</td>
-      <td>${formatStatus(p.status)}</td>
+      <td>${p.status?.id ?? "-"}</td>
       <td>${formatAssigned(p.assigned)}</td>
-      <td>${formatCategory(p.category)}</td>
-      <td>${formatUser(p.creator)}</td>
-      <td>${formatUser(p.manager)}</td>
+      <td>${p.category?.id ?? "-"}</td>
+      <td>${p.creator?.id ?? "-"}</td>
+      <td>${p.manager?.id ?? "-"}</td>
       <td>${formatCategoryName(p)}</td>
       <td>${formatDate(p.created_at)}</td>
       <td>${formatDate(p.updated_at)}</td>
@@ -98,7 +98,14 @@ async function fetchProjects() {
     row.onclick = () => setOutput(p);
     table.appendChild(row);
   });
+}
 
+/* ================= ACTIONS ================= */
+
+async function fetchProjects() {
+  const json = await apiGet("projects");
+  const projects = findProjectsDeep(json);
+  renderTable(projects);
   setOutput(json);
 }
 
@@ -108,30 +115,6 @@ async function fetchProjectById() {
 
   const json = await apiGet(`projects/${id}`);
   const projects = findProjectsDeep(json);
-
-  const table = document.getElementById("projectsTable");
-  table.innerHTML = "";
-
-  projects.forEach(p => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${p.id}</td>
-      <td>${p.title}</td>
-      <td>${p.description || "-"}</td>
-      <td>${formatDate(p.start_date)}</td>
-      <td>${formatDate(p.end_date)}</td>
-      <td>${formatStatus(p.status)}</td>
-      <td>${formatAssigned(p.assigned)}</td>
-      <td>${formatCategory(p.category)}</td>
-      <td>${formatUser(p.creator)}</td>
-      <td>${formatUser(p.manager)}</td>
-      <td>${formatCategoryName(p)}</td>
-      <td>${formatDate(p.created_at)}</td>
-      <td>${formatDate(p.updated_at)}</td>
-    `;
-    row.onclick = () => setOutput(p);
-    table.appendChild(row);
-  });
-
+  renderTable(projects);
   setOutput(json);
 }
