@@ -33,11 +33,12 @@ async function loadPeople() {
   const select = document.getElementById("assignedFilter");
 
   people.forEach(p => {
-    PEOPLE[p.id] = `${p.first_name} ${p.last_name}`.trim();
+    const name = `${p.first_name} ${p.last_name}`.trim();
+    PEOPLE[p.id] = name || p.id;
 
     const opt = document.createElement("option");
     opt.value = p.id;
-    opt.textContent = PEOPLE[p.id];
+    opt.textContent = name || p.id;
     select.appendChild(opt);
   });
 }
@@ -87,7 +88,7 @@ function render(items) {
   taskBody.innerHTML = "";
 
   items.forEach(item => {
-    const assigned =
+    const assignedNames =
       item.assigned?.map(id => PEOPLE[id] || id).join(", ") || "—";
 
     /* EVENTS + MILESTONES */
@@ -97,28 +98,46 @@ function render(items) {
           <td>${item.type}</td>
           <td>${item.title}</td>
           <td>${item.project_name || "—"}</td>
-          <td>${item.start}</td>
-          <td>${item.end}</td>
+          <td>${item.start || "—"}</td>
+          <td>${item.end || "—"}</td>
           <td>${item.all_day ? "Yes" : "No"}</td>
-          <td>${assigned}</td>
+          <td>${assignedNames}</td>
         </tr>
       `;
     }
 
     /* TASKS */
-    if (item.section === "tasks") {
+    if (item.section === "tasks" || item.type === "Tasks") {
+
+      const ticket = item.ticket ?? "—";
+
+      const listName =
+        item.list_name ||
+        item.list?.name ||
+        (item.list_id ? `ID: ${item.list_id}` : "—");
+
+      const workflowName =
+        item.workflow_name ||
+        item.workflow?.name ||
+        (item.workflow ? `ID: ${item.workflow}` : "—");
+
+      const stageName =
+        item.stage_name ||
+        item.stage?.name ||
+        (item.stage ? `ID: ${item.stage}` : "—");
+
       taskBody.innerHTML += `
         <tr>
-          <td>${item.ticket || "—"}</td>
+          <td>${ticket}</td>
           <td>${item.title}</td>
-          <td>${item.project_name}</td>
-          <td>${item.list_name || "—"}</td>
-          <td>${item.workflow_name || "—"}</td>
-          <td>${item.stage_name || "—"}</td>
-          <td>${item.start}</td>
-          <td>${item.end}</td>
+          <td>${item.project_name || "—"}</td>
+          <td>${listName}</td>
+          <td>${workflowName}</td>
+          <td>${stageName}</td>
+          <td>${item.start || "—"}</td>
+          <td>${item.end || "—"}</td>
           <td>${item.completed ? "Yes" : "No"}</td>
-          <td>${assigned}</td>
+          <td>${assignedNames}</td>
           <td>${item.by_me ? "Yes" : "No"}</td>
         </tr>
       `;
