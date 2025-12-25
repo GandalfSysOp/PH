@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Project Details | ProofHub</title>
+
+  <!-- Bootstrap + Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(180deg, #eef2ff, #f8fafc);
+      font-size: 12px;
+      margin: 0;
+    }
+
+    /* Header */
+    .app-header {
+      height: 56px;
+      background: linear-gradient(90deg, #4f46e5, #6366f1);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      font-weight: 600;
+    }
+
+    /* Layout */
+    .container {
+      padding: 20px;
+      max-width: 1100px;
+    }
+
+    /* Cards */
+    .card {
+      border-radius: 14px;
+      box-shadow: 0 10px 24px rgba(15,23,42,0.1);
+      margin-bottom: 16px;
+    }
+
+    .label {
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .value {
+      font-size: 13px;
+      font-weight: 500;
+      color: #0f172a;
+    }
+
+    /* Assigned */
+    .assigned-text {
+      line-height: 1.5;
+    }
+
+    /* JSON */
+    .json-panel {
+      background: #020617;
+      color: #e5e7eb;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 12px;
+      max-height: 400px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .json-key { color: #38bdf8; }
+    .json-string { color: #4ade80; }
+    .json-number { color: #facc15; }
+    .json-boolean { color: #fb7185; }
+    .json-null { color: #94a3b8; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      padding: 10px 0;
+      color: #64748b;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Header -->
+<div class="app-header">
+  <i class="bi bi-folder2-open me-2"></i> Project Details
+</div>
+
+<div class="container">
+
+  <!-- Input -->
+  <div class="card p-3">
+    <div class="d-flex gap-2 align-items-center">
+      <input
+        id="projectIdInput"
+        class="form-control form-control-sm"
+        placeholder="Enter Project ID (e.g. 6607725333)"
+      />
+      <button class="btn btn-primary btn-sm" onclick="getProject()">
+        Get Project
+      </button>
+    </div>
+  </div>
+
+  <!-- Details -->
+  <div id="projectDetails"></div>
+
+  <!-- Raw JSON -->
+  <h6 class="mt-3">Raw JSON</h6>
+  <div id="output" class="json-panel"></div>
+
+</div>
+
+<div class="footer">
+  © 2025 ProofHub API Dashboard
+</div>
+
+<script src="project.js"></script>
+</body>
+</html>
