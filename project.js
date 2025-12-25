@@ -1,6 +1,10 @@
 const BASE_URL =
   "https://script.google.com/macros/s/AKfycbz0hhGxhstl2xdyUBM5qtfN2VXP2oVKoSwZ8elcP6dkETdz-_yECOsNIOPNmwjur4A0/exec";
 
+/* ================= PEOPLE CACHE ================= */
+
+let PEOPLE_MAP = {};
+
 /* ================= API ================= */
 
 async function apiGet(path) {
@@ -9,16 +13,41 @@ async function apiGet(path) {
   return res.json();
 }
 
+/* ================= LOAD PEOPLE ================= */
+
+async function loadPeopleMap() {
+  if (Object.keys(PEOPLE_MAP).length) return;
+
+  const people = await apiGet("people");
+  people.forEach(p => {
+    PEOPLE_MAP[p.id] = `${p.first_name} ${p.last_name}`.trim();
+  });
+}
+
+function personName(id) {
+  return PEOPLE_MAP[id]
+    ? `${PEOPLE_MAP[id]} (${id})`
+    : id;
+}
+
 /* ================= HELPERS ================= */
 
 function formatValue(value) {
   if (value === null || value === undefined) return "-";
 
+  // Arrays (assigned, tabs, projects)
   if (Array.isArray(value)) {
-    return value.length ? value.join(", ") : "-";
+    return value.length
+      ? value.map(v => personName(v)).join(", ")
+      : "-";
   }
 
+  // Objects (creator, manager, status, category)
   if (typeof value === "object") {
+    if ("id" in value) {
+      return personName(value.id);
+    }
+
     return Object.entries(value)
       .map(([k, v]) => `${k}: ${formatValue(v)}`)
       .join(", ");
@@ -64,6 +93,8 @@ function renderProject(project) {
 async function getProject() {
   const id = document.getElementById("projectIdInput").value.trim();
   if (!id) return alert("Enter a Project ID");
+
+  await loadPeopleMap(); // 🔑 key line
 
   const json = await apiGet(`projects/${id}`);
   renderProject(json);
