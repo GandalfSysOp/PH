@@ -62,8 +62,16 @@
       <div class="col-md-3">
         <label>Assigned</label>
         <select id="assignedFilter" class="form-select form-select-sm">
-          <option value="">All (assigned + unassigned)</option>
-          <option value="all_assigned">Only assigned</option>
+          <option value="">All users</option>
+          <option value="all_assigned">Only assigned (any user)</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label>Include Unassigned</label>
+        <select id="includeUnassignedFilter" class="form-select form-select-sm">
+          <option value="true">Yes</option>
+          <option value="false">No</option>
         </select>
       </div>
 
