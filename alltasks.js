@@ -6,7 +6,11 @@ const BASE_URL =
 let start = 0;
 let limit = 100;
 let total = 0;
-let CURRENT_TASKS = [];
+
+let ALL_TASKS = [];
+let FILTERED_TASKS = [];
+
+let PEOPLE = {};
 
 /* ================= API ================= */
 
@@ -14,75 +18,90 @@ async function apiGet(path) {
   const url = `${BASE_URL}?path=${encodeURIComponent(
     `${path}?start=${start}&limit=${limit}`
   )}`;
-
   const res = await fetch(url);
-  if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
-/* ================= NORMALIZE RESPONSE ================= */
+/* ================= NORMALIZE ================= */
 
-function normalizeAllTodoResponse(response) {
-  // CASE 1: GAS returns array directly ✅
-  if (Array.isArray(response)) {
-    return {
-      todos: response,
-      total_count: response.length
-    };
+function normalizeAllTodoResponse(res) {
+  if (Array.isArray(res)) {
+    return { todos: res, total_count: res.length };
   }
-
-  // CASE 2: { todos: [...] }
-  if (Array.isArray(response.todos)) {
-    return {
-      todos: response.todos,
-      total_count: response.total_count ?? response.todos.length
-    };
+  if (res.todos) {
+    return { todos: res.todos, total_count: res.total_count };
   }
-
-  // CASE 3: { data: { todos: [...] } }
-  if (response.data && Array.isArray(response.data.todos)) {
-    return {
-      todos: response.data.todos,
-      total_count: response.data.total_count ?? response.data.todos.length
-    };
+  if (res.data?.todos) {
+    return { todos: res.data.todos, total_count: res.data.total_count };
   }
-
-  // Fallback (should never happen now)
   return { todos: [], total_count: 0 };
 }
 
-/* ================= EXCLUDED FIELDS ================= */
+/* ================= LOAD PEOPLE ================= */
 
-const EXCLUDED_FIELDS = new Set([
-  "baseline_start_date",
-  "baseline_end_date",
-  "rrule",
-  "template",
-  "form_task",
-  "user_stages"
-]);
+async function loadPeople() {
+  const res = await apiGet("people");
+  const people = res.data || res;
 
-/* ================= FETCH ================= */
+  const assignedSelect = document.getElementById("assignedFilter");
+
+  people.forEach(p => {
+    PEOPLE[p.id] = `${p.first_name} ${p.last_name}`.trim();
+
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = PEOPLE[p.id];
+    assignedSelect.appendChild(opt);
+  });
+}
+
+/* ================= FETCH TASKS ================= */
 
 async function fetchTasks() {
-  try {
-    const response = await apiGet("alltodo");
+  await loadPeople();
 
-    console.log("RAW RESPONSE:", response);
+  const res = await apiGet("alltodo");
+  const { todos, total_count } = normalizeAllTodoResponse(res);
 
-    const { todos, total_count } =
-      normalizeAllTodoResponse(response);
+  ALL_TASKS = todos;
+  FILTERED_TASKS = todos;
+  total = total_count;
 
-    console.log("NORMALIZED:", { todos, total_count });
+  populateProjectFilter();
+  applyFilters();
+  renderPageInfo();
+}
 
-    CURRENT_TASKS = todos;
-    total = total_count;
+/* ================= FILTERS ================= */
 
-    renderTasks(CURRENT_TASKS);
-    renderPageInfo();
-  } catch (e) {
-    console.error("Fetch error:", e);
-  }
+function populateProjectFilter() {
+  const select = document.getElementById("projectFilter");
+  select.innerHTML = `<option value="">All</option>`;
+
+  const projects = [...new Set(ALL_TASKS.map(t => t.project?.id).filter(Boolean))];
+
+  projects.forEach(pid => {
+    const name = ALL_TASKS.find(t => t.project?.id === pid)?.project?.name;
+    const opt = document.createElement("option");
+    opt.value = pid;
+    opt.textContent = name || pid;
+    select.appendChild(opt);
+  });
+}
+
+function applyFilters() {
+  const project = document.getElementById("projectFilter").value;
+  const assigned = document.getElementById("assignedFilter").value;
+  const completed = document.getElementById("completedFilter").value;
+
+  FILTERED_TASKS = ALL_TASKS.filter(t => {
+    if (project && t.project?.id != project) return false;
+    if (assigned && !t.assigned?.includes(Number(assigned))) return false;
+    if (completed && String(t.completed) !== completed) return false;
+    return true;
+  });
+
+  renderTasks(FILTERED_TASKS);
 }
 
 /* ================= RENDER ================= */
@@ -94,65 +113,45 @@ function renderTasks(tasks) {
   if (!tasks.length) {
     tbody.innerHTML = `
       <tr>
-        <td class="text-center text-muted">
-          No tasks found
-        </td>
-      </tr>
-    `;
+        <td colspan="7" class="text-center text-muted">No tasks found</td>
+      </tr>`;
     return;
   }
 
-  tasks.forEach(task => {
-    let html = `<td>`;
+  tasks.forEach(t => {
+    const assignedNames =
+      t.assigned?.map(id => PEOPLE[id] || id).join(", ") || "—";
 
-    Object.keys(task).forEach(key => {
-      if (EXCLUDED_FIELDS.has(key)) return;
+    const creatorName = PEOPLE[t.creator?.id] || t.creator?.id || "—";
 
-      let value = task[key];
-
-      if (value === null || value === undefined) {
-        value = "-";
-      } else if (Array.isArray(value)) {
-        value = value.length ? JSON.stringify(value) : "[]";
-      } else if (typeof value === "object") {
-        value = JSON.stringify(value);
-      }
-
-      html += `
-        <div style="margin-bottom:4px">
-          <strong>${key}</strong>: ${value}
-        </div>
-      `;
-    });
-
-    html += `</td>`;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = html;
-    tbody.appendChild(tr);
+    tbody.innerHTML += `
+      <tr>
+        <td>${t.ticket}</td>
+        <td>${t.title}</td>
+        <td>${t.project?.name || "—"}</td>
+        <td>${assignedNames}</td>
+        <td>${creatorName}</td>
+        <td>${t.completed ? "Completed" : "Open"}</td>
+        <td>${t.due_date || "—"}</td>
+      </tr>`;
   });
 }
 
-/* ================= PAGINATION ================= */
-
 function renderPageInfo() {
-  const from = total === 0 ? 0 : start + 1;
+  const from = total ? start + 1 : 0;
   const to = Math.min(start + limit, total);
-
   document.getElementById("pageInfo").textContent =
     `Showing ${from}–${to} of ${total}`;
 }
 
+/* ================= PAGINATION ================= */
+
 function nextPage() {
-  if (start + limit < total) {
-    start += limit;
-    fetchTasks();
-  }
+  start += limit;
+  fetchTasks();
 }
 
 function prevPage() {
-  if (start > 0) {
-    start = Math.max(0, start - limit);
-    fetchTasks();
-  }
+  start = Math.max(0, start - limit);
+  fetchTasks();
 }
