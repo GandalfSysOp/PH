@@ -1,10 +1,20 @@
 const BASE_URL =
-  "https://script.google.com/macros/s/AKfycbw4ek_vcqZEHEOuwlEGXneYDtVKv8MyhyuJ6nZ3y8N0-3E8JwpDiqTV8hoNffrhzwtR/exec";
+  "https://script.google.com/macros/s/NEW_CALENDAR_PROXY_EXEC_ID/exec";
 
 /* ================= STATE ================= */
 
 let PEOPLE = {};
-let ALL_CALENDAR_ITEMS = [];
+let ALL_ITEMS = [];
+
+/* ================= HELPERS ================= */
+
+function unwrapArray(res) {
+  if (!res) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.data)) return res.data;
+  if (res.data && Array.isArray(res.data.data)) return res.data.data;
+  return [];
+}
 
 /* ================= API ================= */
 
@@ -18,11 +28,11 @@ async function apiGet(path) {
 
 async function loadPeople() {
   const res = await apiGet("v3/people");
-  const data = res.data || res;
+  const people = unwrapArray(res);
 
   const select = document.getElementById("assignedFilter");
 
-  data.forEach(p => {
+  people.forEach(p => {
     PEOPLE[p.id] = `${p.first_name} ${p.last_name}`.trim();
 
     const opt = document.createElement("option");
@@ -32,88 +42,87 @@ async function loadPeople() {
   });
 }
 
-/* ================= FETCH (NO PARAMS) ================= */
+/* ================= FETCH ================= */
 
 async function fetchCalendar() {
-  console.log("Fetching v3/allcalendars");
-
   const res = await apiGet("v3/allcalendars");
-
-  if (!res || !Array.isArray(res.data)) {
-    console.error("Invalid calendar response", res);
-    alert("Calendar API rejected the request.");
-    return;
-  }
-
-  ALL_CALENDAR_ITEMS = res.data;
-  applyClientFilters();
+  ALL_ITEMS = unwrapArray(res);
+  applyFilters();
 }
 
-/* ================= CLIENT FILTERS ================= */
+/* ================= FILTERS ================= */
 
-function applyClientFilters() {
-  const view = document.getElementById("viewFilter").value;
+function applyFilters() {
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
   const assigned = document.getElementById("assignedFilter").value;
 
-  let filtered = [...ALL_CALENDAR_ITEMS];
+  let filtered = [...ALL_ITEMS];
 
-  // VIEW FILTER
-  if (view !== "events,milestones,tasks") {
-    const allowed = view.split(",");
-    filtered = filtered.filter(item =>
-      allowed.includes(item.type?.toLowerCase())
-    );
+  if (from) {
+    filtered = filtered.filter(i => i.start?.slice(0, 10) >= from);
   }
 
-  // ASSIGNED FILTER
+  if (to) {
+    filtered = filtered.filter(i => i.end?.slice(0, 10) <= to);
+  }
+
   if (assigned === "none") {
-    filtered = filtered.filter(
-      item => !item.assigned || item.assigned.length === 0
-    );
+    filtered = filtered.filter(i => !i.assigned || i.assigned.length === 0);
   } else if (assigned !== "all") {
     const uid = Number(assigned);
-    filtered = filtered.filter(
-      item => item.assigned && item.assigned.includes(uid)
-    );
+    filtered = filtered.filter(i => i.assigned?.includes(uid));
   }
 
-  renderCalendar(filtered);
+  render(filtered);
 }
 
 /* ================= RENDER ================= */
 
-function renderCalendar(items) {
-  const tbody = document.getElementById("calendarTable");
-  tbody.innerHTML = "";
+function render(items) {
+  const eventBody = document.getElementById("eventTable");
+  const taskBody = document.getElementById("taskTable");
 
-  if (!items.length) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="10" class="text-center text-muted">
-          No calendar items found
-        </td>
-      </tr>`;
-    return;
-  }
+  eventBody.innerHTML = "";
+  taskBody.innerHTML = "";
 
   items.forEach(item => {
-    const assignedNames =
+    const assigned =
       item.assigned?.map(id => PEOPLE[id] || id).join(", ") || "—";
 
-    tbody.innerHTML += `
-      <tr>
-        <td>${item.type}</td>
-        <td>${item.id}</td>
-        <td>${item.title}</td>
-        <td>${item.project_name || "—"}</td>
-        <td>${item.start}</td>
-        <td>${item.end}</td>
-        <td>${item.all_day ? "Yes" : "No"}</td>
-        <td>${assignedNames}</td>
-        <td>${item.completed ? "Yes" : "No"}</td>
-        <td>${item.by_me ? "Yes" : "No"}</td>
-      </tr>
-    `;
+    /* EVENTS + MILESTONES */
+    if (item.type === "Events" || item.type === "Milestones") {
+      eventBody.innerHTML += `
+        <tr>
+          <td>${item.type}</td>
+          <td>${item.title}</td>
+          <td>${item.project_name || "—"}</td>
+          <td>${item.start}</td>
+          <td>${item.end}</td>
+          <td>${item.all_day ? "Yes" : "No"}</td>
+          <td>${assigned}</td>
+        </tr>
+      `;
+    }
+
+    /* TASKS */
+    if (item.section === "tasks") {
+      taskBody.innerHTML += `
+        <tr>
+          <td>${item.ticket || "—"}</td>
+          <td>${item.title}</td>
+          <td>${item.project_name}</td>
+          <td>${item.list_name || "—"}</td>
+          <td>${item.workflow_name || "—"}</td>
+          <td>${item.stage_name || "—"}</td>
+          <td>${item.start}</td>
+          <td>${item.end}</td>
+          <td>${item.completed ? "Yes" : "No"}</td>
+          <td>${assigned}</td>
+          <td>${item.by_me ? "Yes" : "No"}</td>
+        </tr>
+      `;
+    }
   });
 }
 
