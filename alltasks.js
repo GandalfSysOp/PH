@@ -14,6 +14,7 @@ async function apiGet(path, params = {}) {
   const url = `${BASE_URL}?path=${encodeURIComponent(
     path + (qs ? "?" + qs : "")
   )}`;
+
   const res = await fetch(url);
   return res.json();
 }
@@ -32,6 +33,7 @@ async function loadPeople() {
   const data = res.data || res;
 
   const sel = document.getElementById("assignedFilter");
+
   data.forEach(p => {
     PEOPLE[p.id] = `${p.first_name} ${p.last_name}`.trim();
     const opt = document.createElement("option");
@@ -61,14 +63,36 @@ async function loadProjects() {
 /* ================= FETCH ================= */
 
 async function fetchTasks() {
-  const params = {
-    assigned: document.getElementById("assignedFilter").value,
-    projects: document.getElementById("projectFilter").value || undefined,
-    completed: document.getElementById("completedFilter").value,
-    include_subtasks: document.getElementById("subtaskFilter").value,
-    start: document.getElementById("startInput").value,
-    limit: document.getElementById("limitInput").value
-  };
+  const start = Number(document.getElementById("startInput").value || 0);
+  const limit = Number(document.getElementById("limitInput").value || 100);
+
+  const assigned = document.getElementById("assignedFilter").value;
+  const project = document.getElementById("projectFilter").value;
+  const completed = document.getElementById("completedFilter").value;
+  const subtasks = document.getElementById("subtaskFilter").value;
+
+  const params = { start, limit };
+
+  // Apply ProofHub rules strictly
+  if (assigned === "all_assigned") {
+    params.assigned = "all_assigned";
+  } else if (assigned) {
+    params.assigned = assigned;
+  }
+
+  if (project) {
+    params.projects = project;
+  }
+
+  if (completed) {
+    params.completed = completed;
+  }
+
+  if (subtasks === "false") {
+    params.include_subtasks = false;
+  }
+
+  console.log("REQUEST PARAMS →", params);
 
   const res = await apiGet("alltodo", params);
   const { todos } = normalizeAllTodoResponse(res);
@@ -85,29 +109,40 @@ function renderTasks() {
 
   if (!CURRENT_TASKS.length) {
     tbody.innerHTML = `
-      <tr><td colspan="9" class="text-center text-muted">No tasks found</td></tr>`;
+      <tr>
+        <td colspan="10" class="text-center text-muted">
+          No tasks found
+        </td>
+      </tr>`;
     return;
   }
 
   CURRENT_TASKS.forEach((t, i) => {
-    const assigned = t.assigned?.map(id => PEOPLE[id] || id).join(", ") || "—";
-    const creator = PEOPLE[t.creator?.id] || t.creator?.id || "—";
+    const assigned =
+      t.assigned?.map(id => PEOPLE[id] || id).join(", ") || "—";
+    const creator =
+      PEOPLE[t.creator?.id] || t.creator?.id || "—";
 
     tbody.innerHTML += `
       <tr>
-        <td><button class="btn btn-link btn-sm" onclick="toggleDetails(${i})">+</button></td>
+        <td>
+          <button class="btn btn-link btn-sm" onclick="toggleDetails(${i})">+</button>
+        </td>
         <td>${t.ticket}</td>
         <td>${t.title}</td>
         <td>${t.project?.name || "—"}</td>
         <td>${assigned}</td>
         <td>${creator}</td>
         <td>${t.start_date || "—"}</td>
+        <td>${t.due_date || "—"}</td>
         <td>${t.completed ? "Completed" : "Open"}</td>
         <td>${t.by_me ? "Yes" : "No"}</td>
       </tr>
 
       <tr id="details-${i}" class="details-row" style="display:none">
-        <td colspan="9">${renderDetails(t)}</td>
+        <td colspan="10">
+          ${renderDetails(t)}
+        </td>
       </tr>
     `;
   });
@@ -119,26 +154,63 @@ function renderDetails(t) {
 
   return `
     <div class="row g-3">
-      <div class="col-md-6"><span class="detail-label">Description:</span> ${t.description || "—"}</div>
-      <div class="col-md-3"><span class="detail-label">Estimated:</span> ${t.estimated_hours || 0}h ${t.estimated_mins || 0}m</div>
-      <div class="col-md-3"><span class="detail-label">Logged:</span> ${t.logged_hours || 0}h ${t.logged_mins || 0}m</div>
+      <div class="col-md-6">
+        <span class="detail-label">Description:</span>
+        ${t.description || "—"}
+      </div>
 
-      <div class="col-md-3"><span class="detail-label">Progress:</span> ${t.percent_progress || 0}%</div>
-      <div class="col-md-3"><span class="detail-label">Labels:</span> ${t.labels?.join(", ") || "—"}</div>
-      <div class="col-md-3"><span class="detail-label">Attachments:</span> ${t.attachments?.length || 0}</div>
-      <div class="col-md-3"><span class="detail-label">Parent ID:</span> ${t.parent_id || "—"}</div>
+      <div class="col-md-3">
+        <span class="detail-label">Estimated:</span>
+        ${t.estimated_hours || 0}h ${t.estimated_mins || 0}m
+      </div>
 
-      <div class="col-md-6"><span class="detail-label">Created:</span> ${t.created_at}</div>
-      <div class="col-md-6"><span class="detail-label">Updated:</span> ${t.updated_at}</div>
+      <div class="col-md-3">
+        <span class="detail-label">Logged:</span>
+        ${t.logged_hours || 0}h ${t.logged_mins || 0}m
+      </div>
 
-      <div class="col-md-12"><span class="detail-label">Custom Fields:</span><br>${custom}</div>
+      <div class="col-md-3">
+        <span class="detail-label">Progress:</span>
+        ${t.percent_progress || 0}%
+      </div>
+
+      <div class="col-md-3">
+        <span class="detail-label">Labels:</span>
+        ${t.labels?.join(", ") || "—"}
+      </div>
+
+      <div class="col-md-3">
+        <span class="detail-label">Attachments:</span>
+        ${t.attachments?.length || 0}
+      </div>
+
+      <div class="col-md-3">
+        <span class="detail-label">Parent ID:</span>
+        ${t.parent_id || "—"}
+      </div>
+
+      <div class="col-md-6">
+        <span class="detail-label">Created:</span>
+        ${t.created_at}
+      </div>
+
+      <div class="col-md-6">
+        <span class="detail-label">Updated:</span>
+        ${t.updated_at}
+      </div>
+
+      <div class="col-md-12">
+        <span class="detail-label">Custom Fields:</span><br>
+        ${custom}
+      </div>
     </div>
   `;
 }
 
 function toggleDetails(i) {
-  const r = document.getElementById(`details-${i}`);
-  r.style.display = r.style.display === "none" ? "table-row" : "none";
+  const row = document.getElementById(`details-${i}`);
+  row.style.display =
+    row.style.display === "none" ? "table-row" : "none";
 }
 
 /* ================= INIT ================= */
