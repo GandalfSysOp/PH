@@ -32,9 +32,10 @@ function findProjectsDeep(data) {
 
 const formatDate = d => (d ? new Date(d).toLocaleDateString() : "-");
 
+/* ✅ FIXED: comma only between items, not after last */
 function formatAssigned(a) {
   if (!Array.isArray(a) || !a.length) return "-";
-  return `<div class="assigned-text">${a.map(id => `${id},`).join("<br>")}</div>`;
+  return `<div class="assigned-text">${a.join(",<br>")}</div>`;
 }
 
 /* ================= JSON FORMATTER ================= */
