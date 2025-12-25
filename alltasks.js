@@ -71,6 +71,8 @@ async function fetchTasks() {
   }
 
   const assigned = document.getElementById("assignedFilter").value;
+  const includeUnassigned =
+    document.getElementById("includeUnassignedFilter").value;
   const project = document.getElementById("projectFilter").value;
   const completed = document.getElementById("completedFilter").value;
   const subtasks = document.getElementById("subtaskFilter").value;
@@ -78,13 +80,20 @@ async function fetchTasks() {
   const params = {
     start,
     limit,
-    completed // ALWAYS send: all | true | false
+    completed // all | true | false (always sent)
   };
 
+  // 🔑 Assigned logic (exactly as clarified)
   if (assigned === "all_assigned") {
     params.assigned = "all_assigned";
-  } else if (assigned) {
+    params.include_unassigned = false;
+  }
+  else if (assigned) {
     params.assigned = assigned;
+    params.include_unassigned = includeUnassigned === "true";
+  }
+  else {
+    params.include_unassigned = true;
   }
 
   if (project) {
