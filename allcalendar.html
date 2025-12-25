@@ -32,6 +32,11 @@
       font-weight: 600;
       white-space: nowrap;
     }
+
+    .hint {
+      font-size: 11px;
+      color: #64748b;
+    }
   </style>
 </head>
 
@@ -58,7 +63,7 @@
       <div class="col-md-3">
         <label>View</label>
         <select id="viewFilter" class="form-select form-select-sm">
-          <option value="events,milestones,tasks">All</option>
+          <option value="events,milestones,tasks">Events + Milestones + Tasks</option>
           <option value="events">Events</option>
           <option value="milestones">Milestones</option>
           <option value="tasks">Tasks</option>
@@ -68,8 +73,21 @@
       <div class="col-md-3">
         <label>Assigned</label>
         <select id="assignedFilter" class="form-select form-select-sm">
-          <option value="all">All</option>
+          <option value="all">All (assigned to anyone)</option>
+          <option value="none">Unassigned only</option>
         </select>
+      </div>
+
+      <div class="col-md-2">
+        <label>Start</label>
+        <input id="startInput" type="number" class="form-control form-control-sm" value="0" />
+        <div class="hint">0, 25, 50…</div>
+      </div>
+
+      <div class="col-md-2">
+        <label>Limit</label>
+        <input id="limitInput" type="number" class="form-control form-control-sm" value="25" />
+        <div class="hint">Page size</div>
       </div>
 
       <div class="col-md-12 text-end">
@@ -96,6 +114,7 @@
             <th>All Day</th>
             <th>Assigned</th>
             <th>Completed</th>
+            <th>By Me</th>
           </tr>
         </thead>
         <tbody id="calendarTable"></tbody>
