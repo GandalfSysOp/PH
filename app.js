@@ -1,9 +1,11 @@
 const BASE_URL =
   "https://script.google.com/macros/s/AKfycbz0hhGxhstl2xdyUBM5qtfN2VXP2oVKoSwZ8elcP6dkETdz-_yECOsNIOPNmwjur4A0/exec";
 
-/* ================= PEOPLE CACHE ================= */
+/* ================= LOOKUP CACHES ================= */
 
 let PEOPLE_MAP = {};
+let CATEGORY_MAP = {};
+let STATUS_MAP = {};
 
 /* ================= API ================= */
 
@@ -13,21 +15,51 @@ async function apiGet(path) {
   return res.json();
 }
 
-/* ================= LOAD PEOPLE ================= */
+/* ================= LOADERS ================= */
 
 async function loadPeopleMap() {
   if (Object.keys(PEOPLE_MAP).length) return;
-
   const people = await apiGet("people");
   people.forEach(p => {
     PEOPLE_MAP[p.id] = `${p.first_name} ${p.last_name}`.trim();
   });
 }
 
+async function loadCategoryMap() {
+  if (Object.keys(CATEGORY_MAP).length) return;
+  const categories = await apiGet("categories");
+  categories.forEach(c => {
+    CATEGORY_MAP[c.id] = c.name;
+  });
+}
+
+async function loadStatusMap() {
+  if (Object.keys(STATUS_MAP).length) return;
+  const statuses = await apiGet("projectstatus");
+  statuses.forEach(s => {
+    STATUS_MAP[s.id] = s.title;
+  });
+}
+
+/* ================= FORMATTERS ================= */
+
 function personName(id) {
-  return PEOPLE_MAP[id]
-    ? `${PEOPLE_MAP[id]} (${id})`
-    : id;
+  return PEOPLE_MAP[id] ? `${PEOPLE_MAP[id]} (${id})` : id;
+}
+
+function categoryName(id) {
+  return CATEGORY_MAP[id] || id || "-";
+}
+
+function statusName(id) {
+  return STATUS_MAP[id] || id || "-";
+}
+
+const formatDate = d => (d ? new Date(d).toLocaleDateString() : "-");
+
+function formatAssigned(arr) {
+  if (!Array.isArray(arr) || !arr.length) return "-";
+  return arr.map(id => personName(id)).join(", ");
 }
 
 /* ================= PROJECT FINDER ================= */
@@ -38,31 +70,15 @@ function findProjectsDeep(data) {
 
   function walk(node) {
     if (!node || typeof node !== "object") return;
-
     if (node.id && node.title && !seen.has(node.id)) {
       seen.add(node.id);
       results.push(node);
     }
-
     Object.values(node).forEach(walk);
   }
 
   walk(data);
   return results;
-}
-
-/* ================= HELPERS ================= */
-
-const formatDate = d => (d ? new Date(d).toLocaleDateString() : "-");
-
-function formatAssigned(a) {
-  if (!Array.isArray(a) || !a.length) return "-";
-  return a.map(id => personName(id)).join(", ");
-}
-
-function formatPerson(obj) {
-  if (!obj || !obj.id) return "-";
-  return personName(obj.id);
 }
 
 /* ================= JSON ================= */
@@ -78,16 +94,14 @@ function formatJsonPretty(obj) {
 }
 
 function setOutput(data) {
-  const el = document.getElementById("output");
-  if (!el) return;
-  el.innerHTML = `<pre style="line-height:1.6">${formatJsonPretty(data)}</pre>`;
+  document.getElementById("output").innerHTML =
+    `<pre style="line-height:1.6">${formatJsonPretty(data)}</pre>`;
 }
 
 /* ================= RENDER ================= */
 
 function renderTable(projects) {
   document.getElementById("totalProjects").textContent = projects.length;
-
   const table = document.getElementById("projectsTable");
   table.innerHTML = "";
 
@@ -99,11 +113,11 @@ function renderTable(projects) {
       <td>${p.description || "-"}</td>
       <td>${formatDate(p.start_date)}</td>
       <td>${formatDate(p.end_date)}</td>
-      <td>${p.status?.id ?? "-"}</td>
+      <td>${statusName(p.status?.id)}</td>
       <td>${formatAssigned(p.assigned)}</td>
-      <td>${p.category?.id ?? "-"}</td>
-      <td>${formatPerson(p.creator)}</td>
-      <td>${formatPerson(p.manager)}</td>
+      <td>${categoryName(p.category?.id)}</td>
+      <td>${personName(p.creator?.id)}</td>
+      <td>${personName(p.manager?.id)}</td>
       <td>${formatDate(p.created_at)}</td>
       <td>${formatDate(p.updated_at)}</td>
     `;
@@ -115,7 +129,11 @@ function renderTable(projects) {
 /* ================= ACTION ================= */
 
 async function fetchProjects() {
-  await loadPeopleMap(); // 🔑 one-time people fetch
+  await Promise.all([
+    loadPeopleMap(),
+    loadCategoryMap(),
+    loadStatusMap()
+  ]);
 
   const json = await apiGet("projects");
   const projects = findProjectsDeep(json);
