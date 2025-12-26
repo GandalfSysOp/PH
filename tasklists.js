@@ -3,7 +3,7 @@ const GAS_URL =
 
 let PEOPLE = {};
 
-/* ================= HELPERS ================= */
+/* ---------- helpers ---------- */
 
 function safeJsonParse(val) {
   if (Array.isArray(val)) return val;
@@ -19,12 +19,13 @@ function safeJsonParse(val) {
 }
 
 async function apiGet(path) {
-  const url = `${GAS_URL}?path=${encodeURIComponent(path)}`;
-  const res = await fetch(url);
+  const res = await fetch(
+    `${GAS_URL}?path=${encodeURIComponent(path)}`
+  );
   return res.json();
 }
 
-/* ================= LOAD PEOPLE ================= */
+/* ---------- people ---------- */
 
 async function loadPeople() {
   const res = await apiGet("v3/people");
@@ -35,12 +36,12 @@ async function loadPeople() {
   });
 }
 
-/* ================= FETCH TASKLISTS ================= */
+/* ---------- fetch ---------- */
 
 async function fetchTasklists() {
   const projectId = document.getElementById("projectId").value.trim();
   if (!projectId) {
-    alert("Please enter a Project ID");
+    alert("Please enter Project ID");
     return;
   }
 
@@ -50,7 +51,7 @@ async function fetchTasklists() {
   renderTasklists(lists);
 }
 
-/* ================= RENDER ================= */
+/* ---------- render ---------- */
 
 function renderTasklists(lists) {
   const tbody = document.getElementById("tasklistTable");
@@ -59,9 +60,8 @@ function renderTasklists(lists) {
   if (!lists.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="17" class="text-center muted">No tasklists found</td>
-      </tr>
-    `;
+        <td colspan="15" class="text-center muted">No tasklists found</td>
+      </tr>`;
     return;
   }
 
@@ -69,33 +69,47 @@ function renderTasklists(lists) {
     const assigned =
       list.assigned?.map(id => PEOPLE[id] || id).join(", ") || "—";
 
+    const creator = PEOPLE[list.creator] || list.creator || "—";
+    const updatedBy = PEOPLE[list.updated_by] || list.updated_by || "—";
+
     const workflow =
       list.workflow_name ||
       list.workflow?.name ||
       (list.workflow ? `ID: ${list.workflow}` : "—");
 
     const customFieldsArr = safeJsonParse(list.custom_fields);
-
     const customFields =
       customFieldsArr.length
         ? customFieldsArr.map(cf => cf.title).join(", ")
         : "—";
 
+    const userStagesArr = safeJsonParse(list.user_stages);
+    const userStages =
+      userStagesArr.length
+        ? userStagesArr
+            .map(u =>
+              `${PEOPLE[u.id] || u.id}: ${u.stages.join(", ")}`
+            )
+            .join(" | ")
+        : "—";
+
     tbody.innerHTML += `
       <tr>
-        <td>${list.id}</td>
-        <td>${list.title}</td>
+        <td><strong>${list.id}</strong> – ${list.title}</td>
+        <td>${list.project || "—"}</td>
         <td>${list.private ? "Yes" : "No"}</td>
         <td>${list.archived ? "Yes" : "No"}</td>
-        <td>${list.completed_count ?? "—"}</td>
-        <td>${list.remaining_count ?? "—"}</td>
+        <td>
+          Completed: ${list.completed_count ?? 0}
+          <br>
+          Remaining: ${list.remaining_count ?? 0}
+        </td>
         <td>${workflow}</td>
         <td>${assigned}</td>
-        <td>${list.show_in_gantt ? "Yes" : "No"}</td>
-        <td>${list.show_in_kanban ? "Yes" : "No"}</td>
-        <td>${list.time_tracking ? "Yes" : "No"}</td>
-        <td>${list.by_me ? "Yes" : "No"}</td>
-        <td>${list.reply_email || "—"}</td>
+        <td>${creator}</td>
+        <td>${updatedBy}</td>
+        <td>${list.timesheet_id ?? "—"}</td>
+        <td>${userStages}</td>
         <td>
           ${
             list.form_task
@@ -111,7 +125,7 @@ function renderTasklists(lists) {
   });
 }
 
-/* ================= INIT ================= */
+/* ---------- init ---------- */
 
 (async function init() {
   await loadPeople();
