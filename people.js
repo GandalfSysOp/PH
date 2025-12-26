@@ -65,7 +65,7 @@ function projectNames(ids) {
 /* ================= ACTION ================= */
 
 async function fetchPeople() {
-  const container = document.getElementById("output");
+  const container = document.getElementById("peopleContainer");
   container.innerHTML = "Loading…";
 
   await Promise.all([
@@ -81,7 +81,7 @@ async function fetchPeople() {
 /* ================= RENDER ================= */
 
 function renderPeople(people) {
-  const container = document.getElementById("output");
+  const container = document.getElementById("peopleContainer");
 
   if (!Array.isArray(people) || !people.length) {
     container.innerHTML = "<p>No people found</p>";
