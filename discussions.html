@@ -32,27 +32,19 @@
     .card {
       border-radius: 14px;
       box-shadow: 0 10px 24px rgba(15,23,42,0.1);
+      margin-bottom: 16px;
     }
 
-    table {
-      font-size: 12px;
+    .field-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 10px;
+      padding: 4px 0;
+      border-bottom: 1px dashed #e5e7eb;
     }
 
-    th {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: #475569;
-      background: #f1f5f9;
-    }
-
-    .expand {
-      cursor: pointer;
-      color: #4f46e5;
-      font-size: 14px;
-    }
-
-    .expanded {
-      background: #f8fafc;
+    .field-row:last-child {
+      border-bottom: none;
     }
 
     .label {
@@ -63,6 +55,11 @@
 
     .value {
       font-size: 13px;
+      word-break: break-word;
+    }
+
+    .badge {
+      font-size: 10px;
     }
 
     .footer {
@@ -82,6 +79,7 @@
 
 <div class="container">
 
+  <!-- FILTER / ACTION BAR -->
   <div class="card p-3 mb-3">
     <div class="row g-2 align-items-end">
       <div class="col-md-4">
@@ -99,25 +97,9 @@
     </div>
   </div>
 
-  <div class="card p-3">
-    <div class="table-responsive">
-      <table class="table table-sm table-hover align-middle">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Title</th>
-            <th>Pinned</th>
-            <th>Private</th>
-            <th>Archived</th>
-            <th>Comments</th>
-            <th>Created</th>
-            <th>Updated</th>
-          </tr>
-        </thead>
-        <tbody id="topicsBody"></tbody>
-      </table>
-    </div>
-  </div>
+  <!-- ✅ THIS IS THE FIX -->
+  <!-- JS RENDERS HERE -->
+  <div id="topicsContainer"></div>
 
 </div>
 
