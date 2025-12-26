@@ -37,6 +37,10 @@
     td {
       vertical-align: top;
     }
+
+    .muted {
+      color: #6b7280;
+    }
   </style>
 </head>
 
@@ -49,7 +53,6 @@
   <!-- PROJECT INPUT -->
   <div class="card p-3 mb-3">
     <div class="row g-3 align-items-end">
-
       <div class="col-md-4">
         <label>Project ID</label>
         <input
@@ -58,13 +61,11 @@
           placeholder="Enter Project ID (e.g. 6607725333)"
         />
       </div>
-
       <div class="col-md-2">
         <button class="btn btn-primary btn-sm w-100" onclick="fetchTasklists()">
           Fetch Tasklists
         </button>
       </div>
-
     </div>
   </div>
 
@@ -80,18 +81,17 @@
             <th>Archived</th>
             <th>Completed</th>
             <th>Remaining</th>
-            <th>Time Tracking</th>
-            <th>Gantt</th>
-            <th>Assigned</th>
             <th>Workflow</th>
-            <th>Milestone</th>
-            <th>Creator</th>
+            <th>Assigned</th>
+            <th>Gantt</th>
+            <th>Kanban</th>
+            <th>Time Tracking</th>
+            <th>By Me</th>
             <th>Reply Email</th>
             <th>Form Task</th>
-            <th>By Me</th>
+            <th>Custom Fields</th>
             <th>Created</th>
             <th>Updated</th>
-            <th>Custom Fields</th>
           </tr>
         </thead>
         <tbody id="tasklistTable"></tbody>
