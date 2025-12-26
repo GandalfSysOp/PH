@@ -30,15 +30,20 @@ async function loadPeople() {
 }
 
 async function loadProjects() {
-  const data = await apiGet("projects");
+  const projects = await apiGet("projects");
 
   const select = document.getElementById("projectSelect");
+  if (!select) {
+    console.error("❌ projectSelect dropdown not found");
+    return;
+  }
+
   select.innerHTML = `<option value="">Select project</option>`;
 
-  data.forEach(project => {
+  projects.forEach(p => {
     const opt = document.createElement("option");
-    opt.value = project.id;
-    opt.textContent = project.title; // ✅ IMPORTANT FIX
+    opt.value = p.id;
+    opt.textContent = p.title; // NOT name
     select.appendChild(opt);
   });
 }
@@ -64,15 +69,22 @@ function toggle(id) {
 
 function renderTopics(topics) {
   const container = document.getElementById("topicsContainer");
-  container.innerHTML = "";
 
-  if (!topics.length) {
-    container.innerHTML = `<div class="alert alert-warning">No discussions found</div>`;
+  if (!container) {
+    console.error("❌ topicsContainer not found in DOM");
     return;
   }
 
-  topics.forEach((t, idx) => {
-    const expandId = `expand-${idx}`;
+  container.innerHTML = "";
+
+  if (!topics || !topics.length) {
+    container.innerHTML =
+      `<div class="alert alert-warning">No discussions found</div>`;
+    return;
+  }
+
+  topics.forEach((t, i) => {
+    const expandId = `topic-expand-${i}`;
 
     const card = document.createElement("div");
     card.className = "card p-3 mb-3";
@@ -83,7 +95,8 @@ function renderTopics(topics) {
           <strong>${t.title}</strong>
           ${t.pinned ? `<span class="badge bg-warning ms-2">Pinned</span>` : ""}
         </div>
-        <button class="btn btn-sm btn-outline-primary" onclick="toggle('${expandId}')">
+        <button class="btn btn-sm btn-outline-primary"
+          onclick="toggle('${expandId}')">
           Details
         </button>
       </div>
@@ -113,19 +126,20 @@ function renderTopics(topics) {
 /* ================= ACTION ================= */
 
 async function fetchTopics() {
-  const projectId = document.getElementById("projectSelect").value;
-  if (!projectId) return alert("Select a project");
+  const projectId = document.getElementById("projectSelect")?.value;
+  if (!projectId) {
+    alert("Select a project");
+    return;
+  }
 
   await loadPeople();
 
   const res = await apiGet(`projects/${projectId}/topics`);
-  const topics = res.topics || [];
-
-  renderTopics(topics);
+  renderTopics(res.topics || []);
 }
 
 /* ================= INIT ================= */
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadProjects();
+document.addEventListener("DOMContentLoaded", () => {
+  loadProjects();
 });
