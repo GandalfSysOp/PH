@@ -47,20 +47,21 @@ async function loadProjects() {
 
 /* ---------- TASKS ---------- */
 async function fetchTasks() {
-  const projectId = projectSelect.value;
-  const tasklistId = tasklistIdInput.value.trim();
+  const projectId = document.getElementById("projectSelect").value;
+  const tasklistId = document.getElementById("tasklistId").value.trim();
 
   if (!projectId || !tasklistId) {
     alert("Select project and enter tasklist ID");
     return;
   }
 
-  const tasks = await apiGet(
-    `v3/projects/${projectId}/todolists/${tasklistId}/tasks`
-  );
+  const path = `v3/projects/${projectId}/todolists/${tasklistId}/tasks`;
+
+  const tasks = await apiGet(path);
 
   document.getElementById("taskCount").innerText = tasks.length;
-  renderTasks(tasks);
+
+  renderTasks(Array.isArray(tasks) ? tasks : []);
 }
 
 /* ---------- RENDER ---------- */
