@@ -1,15 +1,20 @@
 const BASE_URL =
   "https://script.google.com/macros/s/AKfycbz0hhGxhstl2xdyUBM5qtfN2VXP2oVKoSwZ8elcP6dkETdz-_yECOsNIOPNmwjur4A0/exec";
 
-/* ================= LOOKUP ================= */
+/* ================= GLOBAL STORES ================= */
 
 let PEOPLE = {};
+let PROJECTS = {};
+
+/* ================= API ================= */
 
 async function apiGet(path) {
   const res = await fetch(`${BASE_URL}?path=${encodeURIComponent(path)}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+/* ================= LOADERS ================= */
 
 async function loadPeople() {
   if (Object.keys(PEOPLE).length) return;
@@ -18,6 +23,25 @@ async function loadPeople() {
     PEOPLE[p.id] = `${p.first_name} ${p.last_name}`.trim();
   });
 }
+
+async function loadProjects() {
+  const data = await apiGet("projects");
+
+  const select = document.getElementById("projectSelect");
+  if (!select) return;
+
+  select.innerHTML = `<option value="">Select project</option>`;
+
+  data.forEach(p => {
+    PROJECTS[p.id] = p.name;
+    select.insertAdjacentHTML(
+      "beforeend",
+      `<option value="${p.id}">${p.name}</option>`
+    );
+  });
+}
+
+/* ================= HELPERS ================= */
 
 function person(id) {
   return PEOPLE[id] || id || "-";
@@ -28,7 +52,6 @@ function person(id) {
 window.toggle = function (id) {
   const row = document.getElementById(id);
   const icon = document.getElementById(`icon-${id}`);
-
   if (!row) return;
 
   const open = row.style.display === "table-row";
@@ -36,10 +59,10 @@ window.toggle = function (id) {
   icon.textContent = open ? "+" : "−";
 };
 
-/* ================= FETCH ================= */
+/* ================= FETCH TOPICS ================= */
 
 async function fetchTopics() {
-  const projectId = document.getElementById("projectSelect").value;
+  const projectId = document.getElementById("projectSelect")?.value;
   if (!projectId) return alert("Select a project");
 
   await loadPeople();
@@ -60,6 +83,8 @@ async function fetchTopics() {
 
 function renderTopics(topics) {
   const tbody = document.getElementById("topicsBody");
+  if (!tbody) return;
+
   tbody.innerHTML = "";
 
   if (!topics.length) {
@@ -106,3 +131,13 @@ function renderTopics(topics) {
     `);
   });
 }
+
+/* ================= INIT ================= */
+
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await loadProjects();
+  } catch (err) {
+    console.error("Init failed:", err);
+  }
+});
