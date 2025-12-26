@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tasklist Tasks</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    body {
+      background: #f4f6fb;
+      font-size: 12px;
+    }
+
+    header {
+      background: linear-gradient(90deg, #0f766e, #14b8a6);
+      color: #fff;
+      padding: 16px 24px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .card {
+      border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+    }
+
+    th {
+      background: #ccfbf1;
+      white-space: nowrap;
+    }
+
+    td {
+      vertical-align: top;
+    }
+
+    .desc {
+      max-width: 320px;
+      white-space: normal;
+    }
+
+    .muted {
+      color: #6b7280;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>Tasklist Tasks</header>
+
+<div class="container-fluid mt-3">
+
+  <!-- INPUTS -->
+  <div class="card p-3 mb-3">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label>Project ID</label>
+        <input id="projectId" class="form-control form-control-sm" />
+      </div>
+      <div class="col-md-3">
+        <label>Tasklist ID</label>
+        <input id="tasklistId" class="form-control form-control-sm" />
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-success btn-sm w-100" onclick="fetchTasks()">
+          Fetch Tasks
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card p-3">
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered">
+        <thead>
+          <tr>
+            <th>Ticket & Title</th>
+            <th>Description</th>
+            <th>Start</th>
+            <th>Due</th>
+            <th>Completed</th>
+            <th>Progress %</th>
+            <th>Subtasks</th>
+            <th>Estimate</th>
+            <th>Logged</th>
+            <th>Project</th>
+            <th>Tasklist</th>
+            <th>Workflow</th>
+            <th>Stage</th>
+            <th>Creator</th>
+            <th>Assigned</th>
+            <th>Time Tracking</th>
+            <th>By Me</th>
+            <th>Created</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody id="taskTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="tasklist-tasks.js"></script>
+</body>
+</html>
