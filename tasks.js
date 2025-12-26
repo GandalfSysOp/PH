@@ -65,16 +65,13 @@ async function fetchTasks() {
     return;
   }
 
-  // calendar-based GAS endpoint
-  const res = await apiGet("v3/allcalendars");
-
-  let tasks = normalizeArray(res);
-
-  // 🔒 HARD FILTER
-  tasks = tasks.filter(t =>
-    String(t.project) === String(projectId) &&
-    String(t.list_id) === String(tasklistId)
+  // ✅ CORRECT ENDPOINT (tasklist-scoped)
+  const res = await apiGet(
+    `v3/projects/${projectId}/todolists/${tasklistId}/tasks`
   );
+
+  // normalize response
+  const tasks = Array.isArray(res.todos) ? res.todos : [];
 
   renderTasks(tasks);
 }
