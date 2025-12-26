@@ -82,13 +82,9 @@ async function fetchTasks() {
   }
 
   const path = `v3/projects/${projectId}/todolists/${tasklistId}/tasks`;
-
-  const response = await apiGet(path);
-
-  const tasks = Array.isArray(response) ? response : [];
+  const tasks = await apiGet(path);
 
   document.getElementById("taskCount").innerText = tasks.length;
-
   renderTasks(tasks);
 }
 
@@ -146,6 +142,17 @@ function renderTasks(tasks) {
             <div><strong>Archived:</strong> ${t.task_archived ? "Yes" : "No"}</div>
             <div><strong>Parent ID:</strong> ${t.parent_id || "—"}</div>
             <div><strong>Subtasks:</strong> ${t.sub_tasks ?? 0}</div>
+
+            <hr/>
+
+            <div><strong>Estimated Hours:</strong> ${t.estimated_hours ?? "—"}</div>
+            <div><strong>Estimated Hrs (alt):</strong> ${t.estimated_hrs ?? "—"}</div>
+            <div><strong>Estimated Minutes:</strong> ${t.estimated_mins ?? "—"}</div>
+
+            <div><strong>Logged Hours:</strong> ${t.logged_hours ?? "—"}</div>
+            <div><strong>Logged Minutes:</strong> ${t.logged_mins ?? "—"}</div>
+
+            <hr/>
 
             <div><strong>Attachments:</strong> ${(t.attachments || []).length}</div>
             <div><strong>Comments:</strong> ${t.comments ?? 0}</div>
