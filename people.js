@@ -1,104 +1,129 @@
-let PEOPLE_MAP = {};
-
 const BASE_URL =
-  "https://script.google.com/macros/s/AKfycbzoLhRhFe9Y6ufl2DVFwh9mEWdRTelfD1EA7xSesXOWXsmYH9NoeXOJmIrJcYs3Miy9tg/exec";
+  "https://script.google.com/macros/s/AKfycbz0hhGxhstl2xdyUBM5qtfN2VXP2oVKoSwZ8elcP6dkETdz-_yECOsNIOPNmwjur4A0/exec";
 
 /* ================= API ================= */
 
 async function apiGet(path) {
   const res = await fetch(`${BASE_URL}?path=${encodeURIComponent(path)}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+  return JSON.parse(text);
 }
 
-/* ================= CONFIG ================= */
+/* ================= LOOKUP MAPS ================= */
 
-/* Fields we explicitly do NOT want to show */
-const EXCLUDED_FIELDS = [
-  "cell",
-  "profile_color",
-  "send_invite",
-  "initials"
-];
+let ROLE_MAP = {};
+let GROUP_MAP = {};
+let PROJECT_MAP = {};
 
-/* ================= HELPERS ================= */
+/* ================= LOADERS ================= */
 
-function formatValue(value) {
-  if (value === null || value === undefined) return "-";
-
-  if (Array.isArray(value)) {
-    return value.length ? value.join(", ") : "-";
-  }
-
-  if (typeof value === "object") {
-    return Object.entries(value)
-      .map(([k, v]) => `${k}: ${formatValue(v)}`)
-      .join(", ");
-  }
-
-  return value.toString();
-}
-
-function formatJsonPretty(obj) {
-  const json = JSON.stringify(obj, null, 2);
-  return json
-    .replace(/"(.*?)":/g, '<span class="json-key">"$1"</span>:')
-    .replace(/: "(.*?)"/g, ': <span class="json-string">"$1"</span>')
-    .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
-    .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>')
-    .replace(/: null/g, ': <span class="json-null">null</span>');
-}
-
-/* ================= RENDER ================= */
-
-function renderPeople(people) {
-  const container = document.getElementById("peopleContainer");
-  container.innerHTML = "";
-
-  people.forEach(person => {
-    const card = document.createElement("div");
-    card.className = "card p-3";
-
-    card.innerHTML = `
-      <div class="person-header">
-        <img class="avatar" src="${person.image_url || ""}" alt="avatar">
-        <div>
-          <div class="name">${person.first_name} ${person.last_name}</div>
-          <div class="sub">${person.title || "—"} • ${person.email || ""}</div>
-        </div>
-      </div>
-
-      ${Object.keys(person)
-        .filter(key => !EXCLUDED_FIELDS.includes(key))
-        .map(key => `
-          <div class="field-row">
-            <div class="label">${key.replace(/_/g, " ")}</div>
-            <div class="value">${formatValue(person[key])}</div>
-          </div>
-        `)
-        .join("")}
-
-      <div class="json-panel">
-        <pre style="line-height:1.6">${formatJsonPretty(person)}</pre>
-      </div>
-    `;
-
-    container.appendChild(card);
+async function loadRoles() {
+  if (Object.keys(ROLE_MAP).length) return;
+  const roles = await apiGet("roles");
+  roles.forEach(r => {
+    ROLE_MAP[r.id] = r.name;
   });
+}
+
+async function loadGroups() {
+  if (Object.keys(GROUP_MAP).length) return;
+  const groups = await apiGet("groups");
+  groups.forEach(g => {
+    GROUP_MAP[g.id] = g.name;
+  });
+}
+
+async function loadProjects() {
+  if (Object.keys(PROJECT_MAP).length) return;
+  const projects = await apiGet("projects");
+  projects.forEach(p => {
+    PROJECT_MAP[p.id] = p.title;
+  });
+}
+
+/* ================= FORMATTERS ================= */
+
+function roleName(id) {
+  return ROLE_MAP[id] ? `${ROLE_MAP[id]} (${id})` : id || "—";
+}
+
+function groupNames(ids) {
+  if (!Array.isArray(ids) || !ids.length) return "—";
+  return ids
+    .map(id => GROUP_MAP[id] ? `${GROUP_MAP[id]} (${id})` : id)
+    .join("<br>");
+}
+
+function projectNames(ids) {
+  if (!Array.isArray(ids) || !ids.length) return "—";
+  return ids
+    .map(id => PROJECT_MAP[id] ? `${PROJECT_MAP[id]} (${id})` : id)
+    .join("<br>");
 }
 
 /* ================= ACTION ================= */
 
 async function fetchPeople() {
-  const json = await apiGet("people");
+  const container = document.getElementById("output");
+  container.innerHTML = "Loading…";
 
-  const people = Array.isArray(json) ? json : [];
+  await Promise.all([
+    loadRoles(),
+    loadGroups(),
+    loadProjects()
+  ]);
 
-  if (!people.length) {
-    document.getElementById("peopleContainer").innerHTML =
-      "<div class='text-muted'>No people found.</div>";
+  const people = await apiGet("people");
+  renderPeople(people);
+}
+
+/* ================= RENDER ================= */
+
+function renderPeople(people) {
+  const container = document.getElementById("output");
+
+  if (!Array.isArray(people) || !people.length) {
+    container.innerHTML = "<p>No people found</p>";
     return;
   }
 
-  renderPeople(people);
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Groups</th>
+          <th>Projects</th>
+          <th>Verified</th>
+          <th>Last Active</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  people.forEach(p => {
+    html += `
+      <tr>
+        <td>${p.id}</td>
+        <td>${p.first_name} ${p.last_name}</td>
+        <td>${p.email}</td>
+        <td>${roleName(p.role?.id)}</td>
+        <td>${groupNames(p.groups)}</td>
+        <td>${projectNames(p.projects)}</td>
+        <td>${p.verified === "2" ? "Yes" : "No"}</td>
+        <td>${p.last_active || "—"}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  container.innerHTML = html;
 }
