@@ -115,16 +115,20 @@ async function fetchTopics() {
   await loadPeople();
 
   const res = await apiGet(`projects/${projectId}/topics`);
-  renderTopics(res.topics || []);
-  document.getElementById("countText").textContent =
-    `Total discussions: ${res.total_count || 0}`;
-}
 
-function toggle(el) {
-  const row = el.closest("tr");
-  const details = row.nextElementSibling;
-  details.classList.toggle("d-none");
-  el.textContent = details.classList.contains("d-none") ? "+" : "−";
+  // 🔧 FIX: handle both array & object responses
+  let topics = [];
+
+  if (Array.isArray(res)) {
+    topics = res;
+  } else if (Array.isArray(res.topics)) {
+    topics = res.topics;
+  }
+
+  renderTopics(topics);
+
+  document.getElementById("countText").textContent =
+    `Total discussions: ${topics.length}`;
 }
 
 /* ================= INIT ================= */
