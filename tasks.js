@@ -82,7 +82,7 @@ function renderTasks(tasks) {
   const tbody = document.getElementById("taskTable");
   tbody.innerHTML = "";
 
-  if (!tasks.length) {
+  if (!Array.isArray(tasks) || !tasks.length) {
     tbody.innerHTML = `
       <tr>
         <td colspan="19" class="text-center muted">No tasks found</td>
@@ -102,7 +102,9 @@ function renderTasks(tasks) {
         : "—";
 
     const assigned =
-      t.assigned?.length ? t.assigned.join(", ") : "—";
+      Array.isArray(t.assigned) && t.assigned.length
+        ? t.assigned.join(", ")
+        : "—";
 
     tbody.innerHTML += `
       <tr>
@@ -115,11 +117,13 @@ function renderTasks(tasks) {
         <td>${t.sub_tasks ?? 0}</td>
         <td>${estimate}</td>
         <td>${logged}</td>
-        <td>${PROJECTS[t.project] || t.project_name || t.project}</td>
-        <td>${t.list_name || "—"}</td>
-        <td>${t.workflow_name || "—"}</td>
-        <td>${t.stage_name || "—"}</td>
-        <td>${PEOPLE[t.creator] || t.creator}</td>
+
+        <td>${t.project?.name || "—"}</td>
+        <td>${t.list?.name || "—"}</td>
+        <td>${t.workflow?.name || "—"}</td>
+        <td>${t.stage?.name || "—"}</td>
+
+        <td>${PEOPLE[t.creator?.id] || t.creator?.id || "—"}</td>
         <td>${assigned}</td>
         <td>${t.time_tracking ? "Yes" : "No"}</td>
         <td>${t.by_me ? "Yes" : "No"}</td>
