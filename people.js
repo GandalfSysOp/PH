@@ -13,9 +13,7 @@ let PROJECT_MAP = {};
 
 async function apiGet(path) {
   const res = await fetch(`${BASE_URL}?path=${encodeURIComponent(path)}`);
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
@@ -23,45 +21,47 @@ async function apiGet(path) {
 
 async function loadRolesMap() {
   if (Object.keys(ROLE_MAP).length) return;
-
   const roles = await apiGet("roles");
-  roles.forEach(r => {
-    ROLE_MAP[r.id] = r.name;
-  });
+  roles.forEach(r => ROLE_MAP[r.id] = r.name);
 }
 
 async function loadGroupsMap() {
   if (Object.keys(GROUP_MAP).length) return;
-
   const groups = await apiGet("groups");
-  groups.forEach(g => {
-    GROUP_MAP[g.id] = g.name;
-  });
+  groups.forEach(g => GROUP_MAP[g.id] = g.name);
 }
 
 async function loadProjectsMap() {
   if (Object.keys(PROJECT_MAP).length) return;
-
   const projects = await apiGet("projects");
-  projects.forEach(p => {
-    PROJECT_MAP[p.id] = p.title;
-  });
+  projects.forEach(p => PROJECT_MAP[p.id] = p.title);
 }
 
-/* ================= FORMAT HELPERS ================= */
+/* ================= FORMATTERS ================= */
 
-function roleName(id) {
+function roleName(role) {
+  const id = typeof role === "object" ? role?.id : role;
   return ROLE_MAP[id] || id || "-";
 }
 
-function groupNames(ids) {
+function tableFromIds(ids, map) {
   if (!Array.isArray(ids) || !ids.length) return "-";
-  return ids.map(id => GROUP_MAP[id] || id).join(", ");
-}
 
-function projectNames(ids) {
-  if (!Array.isArray(ids) || !ids.length) return "-";
-  return ids.map(id => PROJECT_MAP[id] || id).join(", ");
+  let rows = "";
+  for (let i = 0; i < ids.length; i += 2) {
+    rows += `
+      <tr>
+        <td>${map[ids[i]] || ids[i]}</td>
+        <td>${ids[i + 1] ? (map[ids[i + 1]] || ids[i + 1]) : ""}</td>
+      </tr>
+    `;
+  }
+
+  return `
+    <table class="table table-sm table-bordered mb-0">
+      <tbody>${rows}</tbody>
+    </table>
+  `;
 }
 
 function field(label, value) {
@@ -95,14 +95,14 @@ function renderPeople(people) {
         <div>
           <div class="name">${p.first_name} ${p.last_name}</div>
           <div class="sub">
-            ${roleName(p.role?.id)} • ${p.email}
+            ${roleName(p.role)} • ${p.email || "-"}
           </div>
         </div>
       </div>
 
       ${field("User ID", p.id)}
-      ${field("Groups", groupNames(p.groups))}
-      ${field("Projects", projectNames(p.projects))}
+      ${field("Groups", tableFromIds(p.groups, GROUP_MAP))}
+      ${field("Projects", tableFromIds(p.projects, PROJECT_MAP))}
       ${field("Verified", p.verified)}
       ${field("Suspended", p.suspended)}
       ${field("Timezone", p.timezone)}
