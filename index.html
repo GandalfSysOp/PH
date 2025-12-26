@@ -8,266 +8,242 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
   <style>
-    :root {
-      --glass-bg: rgba(255, 255, 255, 0.6);
-      --glass-border: rgba(255, 255, 255, 0.35);
-      --primary: #6366f1;
-      --secondary: #22d3ee;
-      --text-main: #0f172a;
-      --text-sub: #64748b;
-    }
-
     body {
+      background: linear-gradient(180deg, #eef2ff, #f8fafc);
+      font-size: 13px;
+      color: #0f172a;
       margin: 0;
-      height: 100vh;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background:
-        radial-gradient(1000px 400px at 5% -10%, #c7d2fe, transparent),
-        radial-gradient(800px 400px at 95% 10%, #a5f3fc, transparent),
-        linear-gradient(180deg, #eef2ff, #f8fafc);
-      color: var(--text-main);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
     }
 
-    /* Header */
     .app-header {
       height: 64px;
-      padding: 0 28px;
+      background: linear-gradient(90deg, #4f46e5, #6366f1);
+      color: #fff;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      backdrop-filter: blur(16px);
-      background: var(--glass-bg);
-      border-bottom: 1px solid var(--glass-border);
+      padding: 0 24px;
+      font-weight: 600;
+      font-size: 16px;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 700;
-      font-size: 15px;
+    .container {
+      max-width: 1200px;
+      padding: 20px;
     }
 
-    .brand i {
-      font-size: 20px;
-      color: var(--primary);
-    }
-
-    .subtitle {
-      font-size: 11px;
-      color: var(--text-sub);
-    }
-
-    /* Grid */
-    .dashboard {
-      flex: 1;
-      padding: 22px;
+    .grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
     }
 
-    /* Card */
     .card-link {
-      text-decoration: none;
-      color: inherit;
-      background: var(--glass-bg);
-      backdrop-filter: blur(14px);
-      border: 1px solid var(--glass-border);
-      border-radius: 18px;
+      background: #fff;
+      border-radius: 16px;
       padding: 16px;
+      text-decoration: none;
+      color: #0f172a;
+      box-shadow: 0 10px 24px rgba(15,23,42,0.08);
+      transition: transform .15s ease, box-shadow .15s ease;
       display: flex;
-      align-items: center;
       gap: 14px;
-      transition: all .25s ease;
-      box-shadow: 0 8px 26px rgba(15, 23, 42, 0.08);
+      align-items: center;
     }
 
     .card-link:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
-      background: rgba(255, 255, 255, 0.8);
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(15,23,42,0.12);
+      color: #0f172a;
     }
 
     .icon {
       width: 42px;
       height: 42px;
-      border-radius: 14px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 18px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
       color: #fff;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
       flex-shrink: 0;
     }
 
-    .card-text {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
     .title {
-      font-size: 13px;
       font-weight: 600;
+      font-size: 14px;
     }
 
-    .desc {
+    .sub {
       font-size: 11px;
-      color: var(--text-sub);
+      color: #64748b;
     }
 
-    /* Footer */
     .footer {
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      text-align: center;
       font-size: 11px;
-      color: var(--text-sub);
+      padding: 12px 0;
+      color: #64748b;
+    }
+
+    @media (max-width: 992px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
 </head>
 
 <body>
 
-<!-- Header -->
 <div class="app-header">
-  <div class="brand">
-    <i class="bi bi-boxes"></i>
-    ProofHub API Console
+  <i class="bi bi-speedometer2 me-2"></i> ProofHub API Dashboard
+</div>
+
+<div class="container">
+
+  <div class="grid">
+
+    <!-- Projects -->
+    <a href="allprojects.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-kanban"></i></div>
+      <div>
+        <div class="title">All Projects</div>
+        <div class="sub">List & details</div>
+      </div>
+    </a>
+
+    <a href="project.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-folder2-open"></i></div>
+      <div>
+        <div class="title">Single Project</div>
+        <div class="sub">By Project ID</div>
+      </div>
+    </a>
+
+    <!-- Tasks -->
+    <a href="alltasks.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-list-task"></i></div>
+      <div>
+        <div class="title">All Tasks</div>
+        <div class="sub">Filters & limits</div>
+      </div>
+    </a>
+
+    <a href="tasks.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-check2-square"></i></div>
+      <div>
+        <div class="title">Tasklist Tasks</div>
+        <div class="sub">By Project & List</div>
+      </div>
+    </a>
+
+    <!-- Tasklists -->
+    <a href="tasklists.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-layers"></i></div>
+      <div>
+        <div class="title">Tasklists</div>
+        <div class="sub">Per project</div>
+      </div>
+    </a>
+
+    <!-- Discussions (NEW) -->
+    <a href="discussions.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-chat-left-text"></i></div>
+      <div>
+        <div class="title">Discussions</div>
+        <div class="sub">All topics</div>
+      </div>
+    </a>
+
+    <a href="get-discussion.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-chat-dots"></i></div>
+      <div>
+        <div class="title">Single Discussion</div>
+        <div class="sub">Project + Topic</div>
+      </div>
+    </a>
+
+    <!-- Calendar -->
+    <a href="allcalendar.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-calendar-event"></i></div>
+      <div>
+        <div class="title">Calendar</div>
+        <div class="sub">Events • Tasks</div>
+      </div>
+    </a>
+
+    <!-- People & Access -->
+    <a href="people.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-people"></i></div>
+      <div>
+        <div class="title">People</div>
+        <div class="sub">Users & roles</div>
+      </div>
+    </a>
+
+    <a href="roles.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-person-badge"></i></div>
+      <div>
+        <div class="title">Roles</div>
+        <div class="sub">Permissions</div>
+      </div>
+    </a>
+
+    <a href="groups.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-diagram-3"></i></div>
+      <div>
+        <div class="title">Groups</div>
+        <div class="sub">Team mapping</div>
+      </div>
+    </a>
+
+    <!-- Metadata -->
+    <a href="categories.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-tags"></i></div>
+      <div>
+        <div class="title">Categories</div>
+        <div class="sub">Project categories</div>
+      </div>
+    </a>
+
+    <a href="project-status.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-flag"></i></div>
+      <div>
+        <div class="title">Project Status</div>
+        <div class="sub">Active / Done</div>
+      </div>
+    </a>
+
+    <a href="labels.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-bookmark"></i></div>
+      <div>
+        <div class="title">Labels</div>
+        <div class="sub">Task labels</div>
+      </div>
+    </a>
+
+    <!-- Announcements -->
+    <a href="announcements.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-megaphone"></i></div>
+      <div>
+        <div class="title">Announcements</div>
+        <div class="sub">All announcements</div>
+      </div>
+    </a>
+
+    <a href="get-announcement.html" target="_blank" class="card-link">
+      <div class="icon"><i class="bi bi-megaphone-fill"></i></div>
+      <div>
+        <div class="title">Single Announcement</div>
+        <div class="sub">Detailed view</div>
+      </div>
+    </a>
+
   </div>
-  <div class="subtitle">Internal API Dashboard</div>
-</div>
-
-<!-- Dashboard -->
-<div class="dashboard">
-
-  <!-- Projects -->
-  <a class="card-link" href="allprojects.html" target="_blank">
-    <div class="icon"><i class="bi bi-kanban"></i></div>
-    <div class="card-text">
-      <div class="title">All Projects</div>
-      <div class="desc">Complete project list</div>
-    </div>
-  </a>
-
-  <a class="card-link" href="project.html" target="_blank">
-    <div class="icon"><i class="bi bi-folder"></i></div>
-    <div class="card-text">
-      <div class="title">Single Project</div>
-      <div class="desc">Project details view</div>
-    </div>
-  </a>
-
-  <!-- Tasks -->
-  <a class="card-link" href="alltasks.html" target="_blank">
-    <div class="icon"><i class="bi bi-list-task"></i></div>
-    <div class="card-text">
-      <div class="title">All Tasks</div>
-      <div class="desc">Cross-project tasks</div>
-    </div>
-  </a>
-
-  <a class="card-link" href="tasks.html" target="_blank">
-    <div class="icon"><i class="bi bi-card-checklist"></i></div>
-    <div class="card-text">
-      <div class="title">Tasks (List)</div>
-      <div class="desc">By project & tasklist</div>
-    </div>
-  </a>
-
-  <a class="card-link" href="tasklists.html" target="_blank">
-    <div class="icon"><i class="bi bi-folder2-open"></i></div>
-    <div class="card-text">
-      <div class="title">Tasklists</div>
-      <div class="desc">Tasklist dashboard</div>
-    </div>
-  </a>
-
-  <!-- Calendar -->
-  <a class="card-link" href="allcalendar.html" target="_blank">
-    <div class="icon"><i class="bi bi-calendar-event"></i></div>
-    <div class="card-text">
-      <div class="title">Calendar</div>
-      <div class="desc">Events, milestones, tasks</div>
-    </div>
-  </a>
-
-  <!-- People & Access -->
-  <a class="card-link" href="people.html" target="_blank">
-    <div class="icon"><i class="bi bi-people"></i></div>
-    <div class="card-text">
-      <div class="title">People</div>
-      <div class="desc">Users & access</div>
-    </div>
-  </a>
-
-  <a class="card-link" href="roles.html" target="_blank">
-    <div class="icon"><i class="bi bi-shield-lock"></i></div>
-    <div class="card-text">
-      <div class="title">Roles</div>
-      <div class="desc">Permission levels</div>
-    </div>
-  </a>
-
-  <a class="card-link" href="groups.html" target="_blank">
-    <div class="icon"><i class="bi bi-diagram-3"></i></div>
-    <div class="card-text">
-      <div class="title">Groups</div>
-      <div class="desc">User groups</div>
-    </div>
-  </a>
-
-  <!-- Meta -->
-  <a class="card-link" href="categories.html" target="_blank">
-    <div class="icon"><i class="bi bi-tags"></i></div>
-    <div class="card-text">
-      <div class="title">Categories</div>
-      <div class="desc">Project categories</div>
-    </div>
-  </a>
-
-  <a class="card-link" href="project-status.html" target="_blank">
-    <div class="icon"><i class="bi bi-flag"></i></div>
-    <div class="card-text">
-      <div class="title">Project Status</div>
-      <div class="desc">Workflow states</div>
-    </div>
-  </a>
-
-  <a class="card-link" href="labels.html" target="_blank">
-    <div class="icon"><i class="bi bi-bookmark"></i></div>
-    <div class="card-text">
-      <div class="title">Labels</div>
-      <div class="desc">Task labels</div>
-    </div>
-  </a>
-
-  <!-- Announcements -->
-  <a class="card-link" href="announcements.html" target="_blank">
-    <div class="icon"><i class="bi bi-megaphone"></i></div>
-    <div class="card-text">
-      <div class="title">Announcements</div>
-      <div class="desc">All announcements</div>
-    </div>
-  </a>
-
-  <a class="card-link" href="get-announcement.html" target="_blank">
-    <div class="icon"><i class="bi bi-chat-left-text"></i></div>
-    <div class="card-text">
-      <div class="title">Single Announcement</div>
-      <div class="desc">Announcement details</div>
-    </div>
-  </a>
 
 </div>
 
-<!-- Footer -->
 <div class="footer">
   © 2025 ProofHub API Dashboard
 </div>
