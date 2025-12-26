@@ -1,1 +1,1 @@
-ProofHub API
+Just a dashboard
