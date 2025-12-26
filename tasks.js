@@ -2,17 +2,15 @@ const GAS_URL =
   "https://script.google.com/macros/s/AKfycbw4ek_vcqZEHEOuwlEGXneYDtVKv8MyhyuJ6nZ3y8N0-3E8JwpDiqTV8hoNffrhzwtR/exec";
 
 /* =======================
-   GLOBAL LOOKUP CACHES
+   LOOKUP CACHES
 ======================= */
 const PEOPLE = {};
 const LABELS = {};
 
 /* =======================
-   SAFE API CALL
+   API
 ======================= */
 async function apiGet(path) {
-  if (!path) throw new Error("Missing API path");
-
   const url = `${GAS_URL}?path=${encodeURIComponent(path)}`;
   const res = await fetch(url);
   const text = await res.text();
@@ -20,7 +18,7 @@ async function apiGet(path) {
   try {
     return JSON.parse(text);
   } catch {
-    console.error("Non-JSON response from GAS:", text);
+    console.error("Non-JSON response:", text);
     throw new Error(text);
   }
 }
@@ -37,7 +35,7 @@ async function init() {
 }
 
 /* =======================
-   LOAD PEOPLE
+   PEOPLE
 ======================= */
 async function loadPeople() {
   const data = await apiGet("v3/people");
@@ -47,7 +45,7 @@ async function loadPeople() {
 }
 
 /* =======================
-   LOAD LABELS
+   LABELS
 ======================= */
 async function loadLabels() {
   const data = await apiGet("v3/labels");
@@ -57,7 +55,7 @@ async function loadLabels() {
 }
 
 /* =======================
-   LOAD PROJECTS
+   PROJECTS
 ======================= */
 async function loadProjects() {
   const select = document.getElementById("projectSelect");
@@ -112,9 +110,10 @@ function renderTasks(tasks) {
     const assignedNames =
       (t.assigned || []).map(id => PEOPLE[id] || id).join(", ") || "—";
 
+    const archived = Boolean(t.archived); // ✅ FIXED
+
     const rowId = `expand-${index}`;
 
-    /* MAIN ROW */
     tbody.innerHTML += `
       <tr>
         <td>
@@ -133,20 +132,19 @@ function renderTasks(tasks) {
         <td>${t.created_at || "—"}</td>
       </tr>
 
-      <!-- EXPANDED ROW -->
       <tr id="${rowId}" style="display:none;background:#fafafa;">
         <td colspan="10">
           <div class="p-2">
 
             <div><strong>Ticket ID:</strong> ${t.ticket || "—"}</div>
-            <div><strong>Archived:</strong> ${t.task_archived ? "Yes" : "No"}</div>
+            <div><strong>Archived:</strong> ${archived ? "True" : "False"}</div>
             <div><strong>Parent ID:</strong> ${t.parent_id || "—"}</div>
             <div><strong>Subtasks:</strong> ${t.sub_tasks ?? 0}</div>
 
             <hr/>
 
             <div><strong>Estimated Hours:</strong> ${t.estimated_hours ?? "—"}</div>
-            <div><strong>Estimated Hrs (alt):</strong> ${t.estimated_hrs ?? "—"}</div>
+            <div><strong>Estimated Hrs:</strong> ${t.estimated_hrs ?? "—"}</div>
             <div><strong>Estimated Minutes:</strong> ${t.estimated_mins ?? "—"}</div>
 
             <div><strong>Logged Hours:</strong> ${t.logged_hours ?? "—"}</div>
@@ -164,7 +162,7 @@ function renderTasks(tasks) {
 
             <div class="mt-2">
               <strong>Custom Fields:</strong><br/>
-              ${renderCustomFields(t.custom_fields)}
+              ${renderAllCustomFields(t)}
             </div>
 
           </div>
@@ -187,10 +185,23 @@ function stripHtml(html) {
   return html.replace(/<[^>]*>/g, "").trim();
 }
 
-function renderCustomFields(fields) {
-  if (!Array.isArray(fields) || !fields.length) return "—";
+/* ✅ FIXED: handles BOTH custom_fields[] and custom_field_* */
+function renderAllCustomFields(task) {
+  const results = [];
 
-  return fields
-    .map(f => `<span class="badge bg-light text-dark me-1">${f.title}</span>`)
-    .join(" ");
+  // Array-based fields
+  if (Array.isArray(task.custom_fields)) {
+    task.custom_fields.forEach(f => {
+      results.push(`${f.title}: ${f.value ?? "—"}`);
+    });
+  }
+
+  // Flattened custom_field_XXXX keys
+  Object.keys(task).forEach(key => {
+    if (key.startsWith("custom_field_")) {
+      results.push(`${key.replace("custom_field_", "CF ")}: ${task[key] ?? "—"}`);
+    }
+  });
+
+  return results.length ? results.join("<br/>") : "—";
 }
