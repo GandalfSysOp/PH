@@ -2,12 +2,20 @@ const GAS_URL =
   "https://script.google.com/macros/s/AKfycbw4ek_vcqZEHEOuwlEGXneYDtVKv8MyhyuJ6nZ3y8N0-3E8JwpDiqTV8hoNffrhzwtR/exec";
 
 let PEOPLE = {};
+let PROJECTS = {};
 
-/* ---------- helpers ---------- */
+/* ---------------- helpers ---------------- */
 
 function stripHtml(html) {
   if (!html) return "—";
   return html.replace(/<[^>]*>/g, "").trim();
+}
+
+function normalizeArray(res) {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.todos)) return res.todos;
+  if (Array.isArray(res.data)) return res.data;
+  return [];
 }
 
 async function apiGet(path) {
@@ -17,7 +25,7 @@ async function apiGet(path) {
   return res.json();
 }
 
-/* ---------- preload people ---------- */
+/* ---------------- preload people ---------------- */
 
 async function loadPeople() {
   const res = await apiGet("v3/people");
@@ -27,26 +35,51 @@ async function loadPeople() {
   });
 }
 
-/* ---------- fetch tasks ---------- */
+/* ---------------- preload projects ---------------- */
+
+async function loadProjects() {
+  const res = await apiGet("v3/projects");
+  const projects = Array.isArray(res) ? res : res.projects || [];
+
+  const select = document.getElementById("projectSelect");
+  select.innerHTML = `<option value="">Select a project</option>`;
+
+  projects.forEach(p => {
+    PROJECTS[p.id] = p.title;
+
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = `${p.title} (${p.id})`;
+    select.appendChild(opt);
+  });
+}
+
+/* ---------------- fetch tasks ---------------- */
 
 async function fetchTasks() {
-  const projectId = document.getElementById("projectId").value.trim();
+  const projectId = document.getElementById("projectSelect").value;
   const tasklistId = document.getElementById("tasklistId").value.trim();
 
   if (!projectId || !tasklistId) {
-    alert("Please enter both Project ID and Tasklist ID");
+    alert("Please select a project and enter a tasklist ID");
     return;
   }
 
-  const res = await apiGet(
-    `v3/projects/${projectId}/todolists/${tasklistId}/tasks`
+  // calendar-based GAS endpoint
+  const res = await apiGet("v3/allcalendars");
+
+  let tasks = normalizeArray(res);
+
+  // 🔒 HARD FILTER
+  tasks = tasks.filter(t =>
+    String(t.project) === String(projectId) &&
+    String(t.list_id) === String(tasklistId)
   );
 
-  const tasks = res.todos || [];
   renderTasks(tasks);
 }
 
-/* ---------- render ---------- */
+/* ---------------- render ---------------- */
 
 function renderTasks(tasks) {
   const tbody = document.getElementById("taskTable");
@@ -85,11 +118,11 @@ function renderTasks(tasks) {
         <td>${t.sub_tasks ?? 0}</td>
         <td>${estimate}</td>
         <td>${logged}</td>
-        <td>${t.project?.name || "—"}</td>
-        <td>${t.list?.name || "—"}</td>
-        <td>${t.workflow?.name || "—"}</td>
-        <td>${t.stage?.name || "—"}</td>
-        <td>${PEOPLE[t.creator?.id] || t.creator?.id || "—"}</td>
+        <td>${PROJECTS[t.project] || t.project_name || t.project}</td>
+        <td>${t.list_name || "—"}</td>
+        <td>${t.workflow_name || "—"}</td>
+        <td>${t.stage_name || "—"}</td>
+        <td>${PEOPLE[t.creator] || t.creator}</td>
         <td>${assigned}</td>
         <td>${t.time_tracking ? "Yes" : "No"}</td>
         <td>${t.by_me ? "Yes" : "No"}</td>
@@ -100,8 +133,9 @@ function renderTasks(tasks) {
   });
 }
 
-/* ---------- init ---------- */
+/* ---------------- init ---------------- */
 
 (async function init() {
   await loadPeople();
+  await loadProjects();
 })();
