@@ -1,5 +1,5 @@
 const BASE_URL =
-  "https://script.google.com/macros/s/AKfycbzoLhRhFe9Y6ufl2DVFwh9mEWdRTelfD1EA7xSesXOWXsmYH9NoeXOJmIrJcYs3Miy9tg/exec";
+  "https://script.google.com/macros/s/AKfycbz0hhGxhstl2xdyUBM5qtfN2VXP2oVKoSwZ8elcP6dkETdz-_yECOsNIOPNmwjur4A0/exec";
 
 /* ================= API ================= */
 
@@ -41,6 +41,10 @@ async function fetchGroups() {
 
 /* ================= RENDER ================= */
 
+function safe(val, fallback = "—") {
+  return val === null || val === undefined ? fallback : val;
+}
+
 function renderGroups(groups) {
   const container = document.getElementById("output");
 
@@ -56,7 +60,7 @@ function renderGroups(groups) {
           <th>ID</th>
           <th>Name</th>
           <th>Owner Group</th>
-          <th>People</th>
+          <th>People Count</th>
           <th>Active / Suspended</th>
           <th>Created At</th>
           <th>Assigned Members</th>
@@ -67,6 +71,12 @@ function renderGroups(groups) {
   `;
 
   groups.forEach(g => {
+    const peopleCount = safe(g.people_count, 0);
+    const active = safe(g.active, 0);
+    const suspended = safe(g.suspended, 0);
+    const createdAt = safe(g.created_at);
+    const sortIndex = safe(g.sort_index, 0);
+
     html += `
       <tr>
         <td>${g.id}</td>
@@ -76,20 +86,20 @@ function renderGroups(groups) {
             ${g.owner_group ? "Yes" : "No"}
           </span>
         </td>
-        <td>${g.people_count}</td>
+        <td>${peopleCount}</td>
         <td>
-          ${g.active} <span class="muted">active</span><br>
-          ${g.suspended} <span class="muted">suspended</span>
+          ${active} <span class="muted">active</span><br>
+          ${suspended} <span class="muted">suspended</span>
         </td>
-        <td>${g.created_at || "-"}</td>
+        <td>${createdAt}</td>
         <td class="assigned">
           ${
-            g.assigned.length
+            Array.isArray(g.assigned) && g.assigned.length
               ? g.assigned.map(id => personName(id)).join("<br>")
-              : "-"
+              : "—"
           }
         </td>
-        <td>${g.sort_index}</td>
+        <td>${sortIndex}</td>
       </tr>
     `;
   });
