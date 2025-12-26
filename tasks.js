@@ -1,10 +1,11 @@
 const GAS_URL =
   "https://script.google.com/macros/s/AKfycbw4ek_vcqZEHEOuwlEGXneYDtVKv8MyhyuJ6nZ3y8N0-3E8JwpDiqTV8hoNffrhzwtR/exec";
 
-/* ---------- SAFE API ---------- */
+/* ---------------- SAFE API ---------------- */
 async function apiGet(path) {
   if (!path) throw new Error("Missing API path");
 
+  // IMPORTANT: path MUST include v3/
   const url = `${GAS_URL}?path=${encodeURIComponent(path)}`;
   const res = await fetch(url);
 
@@ -12,28 +13,35 @@ async function apiGet(path) {
 
   try {
     return JSON.parse(text);
-  } catch (e) {
-    console.error("Non-JSON response from GAS:", text);
+  } catch {
+    console.error("GAS returned non-JSON:", text);
     throw new Error(text);
   }
 }
 
-/* ---------- INIT ---------- */
+/* ---------------- INIT ---------------- */
 document.addEventListener("DOMContentLoaded", loadProjects);
 
-/* ---------- PROJECTS ---------- */
+/* ---------------- PROJECTS ---------------- */
 async function loadProjects() {
-  const projects = await apiGet("projects");
   const select = document.getElementById("projectSelect");
+  select.innerHTML = `<option value="">Loading…</option>`;
 
-  select.innerHTML = `<option value="">Select project</option>`;
+  try {
+    const projects = await apiGet("v3/projects");
 
-  projects.forEach(p => {
-    select.innerHTML += `<option value="${p.id}">${p.title}</option>`;
-  });
+    select.innerHTML = `<option value="">Select project</option>`;
+    projects.forEach(p => {
+      select.innerHTML += `<option value="${p.id}">${p.title}</option>`;
+    });
+
+  } catch (err) {
+    select.innerHTML = `<option value="">Failed to load projects</option>`;
+    alert(err.message);
+  }
 }
 
-/* ---------- TASKS ---------- */
+/* ---------------- TASKS ---------------- */
 async function fetchTasks() {
   const projectId = document.getElementById("projectSelect").value;
   const tasklistId = document.getElementById("tasklistId").value.trim();
@@ -43,7 +51,7 @@ async function fetchTasks() {
     return;
   }
 
-  const path = `projects/${projectId}/todolists/${tasklistId}/tasks`;
+  const path = `v3/projects/${projectId}/todolists/${tasklistId}/tasks`;
 
   let response;
   try {
@@ -53,15 +61,15 @@ async function fetchTasks() {
     return;
   }
 
-  console.log("NETWORK DATA", response);
+  console.log("NETWORK RESPONSE:", response);
 
-  // 🔥 This endpoint returns ARRAY
+  // This endpoint returns a RAW ARRAY
   const tasks = Array.isArray(response) ? response : [];
 
   renderTasks(tasks);
 }
 
-/* ---------- RENDER ---------- */
+/* ---------------- RENDER ---------------- */
 function renderTasks(tasks) {
   const tbody = document.getElementById("taskTable");
   tbody.innerHTML = "";
@@ -69,7 +77,7 @@ function renderTasks(tasks) {
   if (!tasks.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="text-center text-muted">
+        <td colspan="8" class="text-center muted">
           No tasks found
         </td>
       </tr>`;
@@ -80,7 +88,7 @@ function renderTasks(tasks) {
     tbody.innerHTML += `
       <tr>
         <td>${t.ticket || "—"}</td>
-        <td>${t.title}</td>
+        <td>${t.title || "—"}</td>
         <td>${t.project_name || "—"}</td>
         <td>${t.list_name || "—"}</td>
         <td>${t.workflow_name || "—"}</td>
